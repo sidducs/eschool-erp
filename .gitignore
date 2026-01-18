@@ -1,0 +1,20 @@
+# --- Dependencies ---
+node_modules/
+backend/node_modules/
+package-lock.json      # Optional: some teams keep this, but for solo projects, it's safe to ignore if it causes conflicts
+yarn.lock
+
+# --- Security (VERY IMPORTANT) ---
+.env
+backend/.env
+.DS_Store
+
+# --- React/Frontend Build ---
+build/
+dist/
+.eslintcache
+
+# --- Logs ---
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

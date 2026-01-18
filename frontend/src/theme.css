@@ -1,0 +1,54 @@
+/* GLOBAL */
+body {
+  background-color: #ffffff;
+  color: #000000;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* NAVBAR */
+.navbar {
+  background-color: #000000 !important;
+}
+
+.navbar-brand,
+.navbar span {
+  color: #ffffff !important;
+}
+
+/* BUTTONS */
+.btn-primary {
+  background-color: #000000;
+  border-color: #000000;
+}
+
+.btn-primary:hover {
+  background-color: #333333;
+  border-color: #333333;
+}
+
+.btn-light {
+  background-color: #ffffff;
+  color: #000000;
+  border: 1px solid #000000;
+}
+
+/* TABLE */
+.table {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+.table thead {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+/* INPUTS */
+.form-control {
+  border: 1px solid #000000;
+}
+
+.form-control:focus {
+  border-color: #000000;
+  box-shadow: none;
+}
