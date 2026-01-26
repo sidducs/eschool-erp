@@ -1,12 +1,10 @@
 const express = require("express");
 const router = express.Router();
-
-const {
-  createTimetable,
-  getTimetableByClass,
-  getTimetableByTeacher,
+const { 
+  createTimetable, 
+  getTimetableByClass, 
+  getTimetableByTeacher 
 } = require("../controllers/timetableController");
-
 const { protect } = require("../middleware/authMiddleware");
 const { isAdmin } = require("../middleware/adminMiddleware");
 

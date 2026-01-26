@@ -6,8 +6,10 @@ import AlertMessage from "../components/AlertMessage";
 import { 
   FaChalkboardTeacher, FaClipboardCheck,  FaCalendarAlt, 
   FaUserGraduate, FaBell, FaSignOutAlt, FaBars, FaCheckCircle, 
-   FaSave, FaMagic, FaSpinner, FaBullhorn 
+   FaSave, FaMagic, FaSpinner, FaBullhorn, FaBookReader 
 } from "react-icons/fa";
+
+import LibraryDashboard from "./LibraryDashboard"; 
 
 function TeacherDashboard() {
   const { user, logout } = useContext(AuthContext);
@@ -178,6 +180,7 @@ function TeacherDashboard() {
           { id: "dashboard", label: "Overview", icon: FaChalkboardTeacher },
           { id: "attendance", label: "Mark Attendance", icon: FaClipboardCheck },
           { id: "marks", label: "Enter Marks (AI)", icon: FaMagic },
+          { id: "library", label: "Library Hub", icon: FaBookReader },
           { id: "timetable", label: "My Timetable", icon: FaCalendarAlt },
         ].map((m) => (
           <button key={m.id} style={styles.menuBtn(activeMenu === m.id)} onClick={() => { setActiveMenu(m.id); setStudents([]); setSelection({classId:"", date:"", examId:""}); }}>
@@ -214,7 +217,7 @@ function TeacherDashboard() {
         {activeMenu === "dashboard" && (
           <div className="fade-in">
              
-             {/* NOTICE BOARD WIDGET (ADDED HERE) */}
+             {/* NOTICE BOARD WIDGET */}
              <div className="row mb-4">
                <div className="col-12">
                  <div className="card border-0 shadow-sm p-3 bg-white" style={styles.card}>
@@ -271,7 +274,6 @@ function TeacherDashboard() {
                    <label style={styles.labelText}>Class</label>
                    <select className="form-select bg-light border-0" value={selection.classId} onChange={(e) => fetchStudentsForClass(e.target.value)}>
                       <option value="">Select...</option>
-                      {/* FIXED: Showing Section Correctly */}
                       {data.classes.map(c => <option key={c._id} value={c._id}>{c.name} {c.section ? `- ${c.section}` : ''}</option>)}
                    </select>
                 </div>
@@ -304,17 +306,15 @@ function TeacherDashboard() {
           </div>
         )}
 
-        {/* --- MARKS VIEW (WITH AI) --- */}
+        {/* --- MARKS VIEW --- */}
         {activeMenu === "marks" && (
           <div style={styles.card} className="p-4 bg-white">
              <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
                 <div>
                     <h5 className="fw-bold m-0 text-dark">Results Entry & AI Remarks</h5>
-                    <small className="text-muted">Enter marks and use the Magic Wand to generate feedback.</small>
                 </div>
                 <button className="btn btn-success btn-sm fw-bold" onClick={submitMarks} disabled={students.length===0}><FaSave className="me-2"/> Save Marks</button>
              </div>
-             
              <div className="mb-4" style={{maxWidth: '400px'}}>
                 <label style={styles.labelText}>Select Exam</label>
                 <select className="form-select bg-light border-0" value={selection.examId} onChange={(e) => fetchStudentsForExam(e.target.value)}>
@@ -322,33 +322,21 @@ function TeacherDashboard() {
                    {data.exams.map(e => <option key={e._id} value={e._id}>{e.name} ({e.subject})</option>)}
                 </select>
              </div>
-
-             {students.length > 0 ? (
+             {students.length > 0 && (
                 <div className="table-responsive">
                    <table className="table table-bordered align-middle">
-                      <thead style={styles.tableHeader}><tr><th>Student</th><th>Marks (Out of 100)</th><th style={{width: '40%'}}>AI Remark</th></tr></thead>
+                      <thead style={styles.tableHeader}><tr><th>Student</th><th>Marks</th><th style={{width: '40%'}}>AI Remark</th></tr></thead>
                       <tbody>
                          {students.map(s => (
                             <tr key={s._id}>
                                <td className="fw-bold text-dark">{s.name}</td>
                                <td style={{width: '150px'}}>
-                                  <input type="number" className="form-control" placeholder="0" value={marksMap[s._id]||''} onChange={(e)=>setMarksMap({...marksMap, [s._id]: e.target.value})} />
+                                  <input type="number" className="form-control" value={marksMap[s._id]||''} onChange={(e)=>setMarksMap({...marksMap, [s._id]: e.target.value})} />
                                </td>
                                <td>
                                   <div className="input-group">
-                                    <input 
-                                        type="text" 
-                                        className="form-control" 
-                                        placeholder="Generate remark..." 
-                                        value={remarksMap[s._id] || ''}
-                                        onChange={(e)=>setRemarksMap({...remarksMap, [s._id]: e.target.value})}
-                                    />
-                                    <button 
-                                        className="btn btn-outline-primary" 
-                                        type="button" 
-                                        onClick={() => generateAiRemark(s._id, s.name)}
-                                        disabled={aiLoading[s._id]}
-                                    >
+                                    <input type="text" className="form-control" value={remarksMap[s._id] || ''} onChange={(e)=>setRemarksMap({...remarksMap, [s._id]: e.target.value})} />
+                                    <button className="btn btn-outline-primary" onClick={() => generateAiRemark(s._id, s.name)} disabled={aiLoading[s._id]}>
                                         {aiLoading[s._id] ? <FaSpinner className="fa-spin"/> : <FaMagic />}
                                     </button>
                                   </div>
@@ -358,11 +346,14 @@ function TeacherDashboard() {
                       </tbody>
                    </table>
                 </div>
-             ) : (
-                <div className="text-center py-5 text-muted bg-light rounded border border-dashed">
-                  {selection.examId ? "No eligible students found." : "Select an Exam to start."}
-                </div>
              )}
+          </div>
+        )}
+
+        {/* --- LIBRARY VIEW --- */}
+        {activeMenu === "library" && (
+          <div className="fade-in">
+             <LibraryDashboard />
           </div>
         )}
 
@@ -374,17 +365,14 @@ function TeacherDashboard() {
                 <table className="table table-hover align-middle mb-0">
                    <thead style={styles.tableHeader}><tr><th className="ps-3">Day</th><th>Time</th><th>Class</th><th>Subject</th></tr></thead>
                    <tbody>
-                      {data.timetable.length === 0 ? (<tr><td colSpan="4" className="text-center py-4 text-muted">No schedule found.</td></tr>) : 
-                         data.timetable.map(t => (
-                            <tr key={t._id}>
-                               <td className="ps-3 fw-bold text-primary">{t.day}</td>
-                               <td><span className="badge bg-light text-dark border">{t.timeSlot}</span></td>
-                               {/* FIXED: Class-Section Display */}
-                               <td>{t.classId?.name} {t.classId?.section ? `- ${t.classId.section}` : ''}</td>
-                               <td className="fw-bold text-dark">{t.subject}</td>
-                            </tr>
-                         ))
-                      }
+                      {data.timetable.map(t => (
+                        <tr key={t._id}>
+                           <td className="ps-3 fw-bold text-primary">{t.day}</td>
+                           <td><span className="badge bg-light text-dark border">{t.timeSlot}</span></td>
+                           <td>{t.classId?.name} {t.classId?.section ? `- ${t.classId.section}` : ''}</td>
+                           <td className="fw-bold text-dark">{t.subject}</td>
+                        </tr>
+                      ))}
                    </tbody>
                 </table>
              </div>

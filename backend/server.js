@@ -6,11 +6,29 @@ const aiRoutes = require("./routes/aiRoutes"); // <--- Import
 const feeRoutes = require("./routes/feeRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const noticeRoutes = require("./routes/noticeRoutes");
+const cron = require("node-cron");
+const Transaction = require("./models/Transaction");
+const libraryRoutes = require("./routes/libraryRoutes"); // 
 dotenv.config();
 connectDB();
 
 const app = express();
+cron.schedule("0 0 * * *", async () => {
+  console.log("Running Daily Fine Calculation...");
+  const today = new Date();
 
+  // Find all books not returned and past due date
+  const overdueBooks = await Transaction.find({
+    status: 'Issued',
+    dueDate: { $lt: today }
+  });
+
+  overdueBooks.forEach(async (record) => {
+    const daysLate = Math.floor((today - record.dueDate) / (1000 * 60 * 60 * 24));
+    record.fine = daysLate * 10; // 10 Rupees per day
+    await record.save();
+  });
+});
 // Middleware
 app.use(cors({
   origin: "http://localhost:3000",
@@ -32,6 +50,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/timetable", require("./routes/timetableRoutes"));
 app.use("/api/ai", aiRoutes); 
 app.use("/api/notices", noticeRoutes);
+app.use("/api/library", require("./routes/libraryRoutes"));
 app.get("/", (req, res) => {
   res.send("ESchool API is running...");
 });
