@@ -51,6 +51,8 @@ ESchool-MERN/
 │   │   ├── pages/      # Main Dashboard views
 │   │   └── services/   # Axios API configurations
 └── README.md
+
+
 ⚙️ Installation & Setup
 1. Clone the repository
 Bash
@@ -80,7 +82,7 @@ The application features a Responsive Sidebar Navigation that:
 
 Functions as a fixed sidebar on Desktop.
 
-Transitions into a Mobile Drawer (Overlay) with a backdrop on smaller screens, ensuring usability when multitasking (e.g., side-by-side with VS Code).
+Transitions into a Mobile Drawer (Overlay) with a backdrop on smaller screens, ensuring usability when multitasking.
 
 🤝 Contributing
 Contributions are welcome! Please open an issue or submit a pull request for any improvements.
