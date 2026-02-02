@@ -21,17 +21,34 @@ exports.createTimetable = async (req, res) => {
       return res.status(400).json({ message: "Select a valid teacher." });
     }
 
-    // Check if slot is already occupied for this class
-    const exists = await Timetable.findOne({ classId, day, timeSlot });
-    if (exists) {
-      return res.status(400).json({ message: `Time slot ${timeSlot} on ${day} is already occupied by '${exists.subject}'.` });
+    // Helper: Parse "HH:MM - HH:MM" to minutes
+    const parseTime = (t) => {
+      const [start, end] = t.split("-").map(p => {
+        const [h, m] = p.trim().split(":").map(Number);
+        return h * 60 + m;
+      });
+      return { start, end };
+    };
+
+    const newTime = parseTime(timeSlot);
+
+    // 1. Check Class Conflict (Overlapping time in same class)
+    const classConflicts = await Timetable.find({ classId, day });
+    for (const slot of classConflicts) {
+      const existing = parseTime(slot.timeSlot);
+      if (newTime.start < existing.end && newTime.end > existing.start) {
+        return res.status(409).json({ message: `Class is busy with '${slot.subject}' during this time.` });
+      }
     }
 
-    // Conflict Check: Is the Teacher busy elsewhere?
-    const teacherBusy = await Timetable.findOne({ teacher, day, timeSlot }).populate("classId");
-    if (teacherBusy) {
-      const busyClass = teacherBusy.classId ? `${teacherBusy.classId.name}-${teacherBusy.classId.section}` : "another class";
-      return res.status(409).json({ message: `Conflict: This teacher is already teaching in ${busyClass} at ${timeSlot} on ${day}!` });
+    // 2. Check Teacher Conflict (Overlapping time for same teacher)
+    const teacherConflicts = await Timetable.find({ teacher, day }).populate("classId");
+    for (const slot of teacherConflicts) {
+      const existing = parseTime(slot.timeSlot);
+      if (newTime.start < existing.end && newTime.end > existing.start) {
+        const busyClass = slot.classId ? `${slot.classId.name}-${slot.classId.section}` : "a class";
+        return res.status(409).json({ message: `Teacher is already in ${busyClass} during this time.` });
+      }
     }
 
     const entry = await Timetable.create({
