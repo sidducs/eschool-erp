@@ -1,88 +1,113 @@
-ESchool ERP - Full Stack MERN Application
-A comprehensive School Management System (ERP) designed to streamline academic operations. The system provides dedicated portals for Administrators, Teachers, and Students with real-time data synchronization and responsive UI.
+# 🎓 ESchool - Modern School Management System (ERP)
 
-🚀 Key Features
-Administrator Portal
-User Management: Full CRUD operations for Students, Teachers, and Admins.
+![ESchool Banner](https://via.placeholder.com/1200x400?text=ESchool+ERP+System)
 
-Academics: Create classes, assign sections, and enroll students.
+A full-stack **MERN** (MongoDB, Express, React, Node.js) School ERP application designed to digitize generic school operations. It features a robust **Role-Based Access Control (RBAC)** system for Admins, Teachers, and Students, along with modern features like Hybrid Registration, AI-powered Remarks, and Dynamic Timetables.
 
-Finance & Fees: Define fee structures, assign fees to students, and track payment history with PDF receipt downloads.
+---
 
-Notice Board: Broadcast announcements to specific roles or the entire school.
+## 🚀 Key Features
 
-Master Timetable: Manage and update the school schedule.
+### 🛡️ Admin Module (Power User)
+- **Dashboard**: Real-time stats, financial overview, and attendance charts.
+- **User Management**: Manage Students and Teachers.
+- **Approvals**: Review "Pending" student registrations and **Auto-Generate SRN**.
+- **Timetable**: **Visual Grid View** with smart conflict detection (prevents double-booking).
+- **Fees**: Create fee structures, track payments, and generate **PDF Receipts**.
+- **Security**: Manually reset passwords for any user using "Security Override".
 
-Bulk Upload: Import student data via CSV files.
+### 👨‍🏫 Teacher Module
+- **Attendance**: Mark daily attendance easily.
+- **Results & AI**: Enter marks and generate **AI-powered performance remarks** for students.
+- **Schedule**: View personal weekly timetable.
+- **Profile**: Manage personal details and profile photo.
 
-Student Portal
-Personal Dashboard: Real-time overview of attendance percentage and exam status.
+### 👨‍🎓 Student Module
+- **Hybrid Registration**: Self-register online (starts as `Pending`) -> Complete Profile -> Admin Approval.
+- **Dashboard**: View Attendance %, Exam Results, and Notices.
+- **Fee Receipts**: Download fee payment receipts directly.
+- **Library**: Search books and view borrowed items.
+- **My Profile**: Update photo, parents' info, and change password.
 
-Academic Tools: View class timetables and examination schedules.
+---
 
-Finance: Check fee status and download payment receipts.
+## 🛠️ Tech Stack
 
-Library Hub: Integrated system to browse and manage book resources.
+- **Frontend**: React.js, Tailwind CSS, React Router, Context API.
+- **Backend**: Node.js, Express.js.
+- **Database**: MongoDB (Mongoose Schema).
+- **Authentication**: JWT (JSON Web Tokens) & Bcrypt for password hashing.
+- **Tools**: Multer (File Upload), Recharts (Analytics), Axios.
 
-Teacher Portal (In Progress)
-Attendance Tracking: Mark and manage student attendance.
+---
 
-Result Management: Upload and update exam scores.
+## ⚙️ Installation & Setup
 
-🛠️ Tech Stack
-Frontend: React.js, Bootstrap 5, Chart.js (for analytics), React Icons.
+Follow these steps to run the project locally.
 
-Backend: Node.js, Express.js.
+### Prerequisites
+- Node.js (v16+)
+- MongoDB (Local or Atlas)
+- Git
 
-Database: MongoDB (via Mongoose).
+### 1. Clone the Repository
+```bash
+git clone https://github.com/sidducs/eschool-erp.git
+cd eschool-erp
+```
 
-Authentication: JWT (JSON Web Tokens) with Context API for state management.
-
-Other Tools: Axios (API calls), Multer (File uploads).
-
-📂 Project Structure
-Plaintext
-ESchool-MERN/
-├── backend/            # Express server, Models, Routes, Middleware
-├── frontend/           # React application
-│   ├── src/
-│   │   ├── components/ # Reusable UI elements
-│   │   ├── context/    # Auth and State management
-│   │   ├── pages/      # Main Dashboard views
-│   │   └── services/   # Axios API configurations
-└── README.md
-
-
-⚙️ Installation & Setup
-1. Clone the repository
-Bash
-git clone https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
-cd ESchool-MERN
-2. Backend Setup
-Bash
+### 2. Backend Setup
+```bash
 cd backend
 npm install
-Create a .env file in the backend folder:
-
-Code snippet
+```
+**Create a `.env` file in the `backend` folder:**
+```env
 PORT=5000
 MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_secret_key
-Start the server:
+JWT_SECRET=your_jwt_secret_key
+```
+**Run the Server:**
+```bash
+npm run dev
+```
 
-Bash
-npm start
-3. Frontend Setup
-Bash
-cd ../frontend
+### 3. Frontend Setup
+Open a new terminal:
+```bash
+cd frontend
 npm install
 npm start
-📱 Responsiveness
-The application features a Responsive Sidebar Navigation that:
+```
 
-Functions as a fixed sidebar on Desktop.
+The app should now be running at `http://localhost:3000`!
 
-Transitions into a Mobile Drawer (Overlay) with a backdrop on smaller screens, ensuring usability when multitasking.
+---
 
-🤝 Contributing
-Contributions are welcome! Please open an issue or submit a pull request for any improvements.
+## 📸 Screenshots
+
+| Admin Dashboard | Student Profile |
+|:---:|:---:|
+| ![Admin](https://via.placeholder.com/400x200?text=Admin+Dashboard) | ![Student](https://via.placeholder.com/400x200?text=Student+Profile) |
+
+| Timetable Grid | Fee Receipt |
+|:---:|:---:|
+| ![Timetable](https://via.placeholder.com/400x200?text=Timetable+Grid) | ![Receipt](https://via.placeholder.com/400x200?text=Fee+Receipt) |
+
+---
+
+## 🤝 Contribution
+
+Contributions are welcome! Please fork the repository and submit a pull request.
+
+1.  Fork the Project
+2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4.  Push to the Branch (`git push origin feature/AmazingFeature`)
+5.  Open a Pull Request
+
+---
+
+## 📄 License
+
+This project is open-source and available under the [MIT License](LICENSE).
