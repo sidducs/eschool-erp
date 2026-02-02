@@ -38,8 +38,14 @@ const getStudentResults = async (req, res) => {
       });
 
     const formatted = results.map((r) => {
-      const percentage =
-        (r.marksObtained / r.examId.totalMarks) * 100;
+      const percentage = (r.marksObtained / r.examId.totalMarks) * 100;
+
+      let grade = "F";
+      if (percentage >= 90) grade = "A+";
+      else if (percentage >= 80) grade = "A";
+      else if (percentage >= 70) grade = "B";
+      else if (percentage >= 60) grade = "C";
+      else if (percentage >= 50) grade = "D";
 
       return {
         examName: r.examId.name,
@@ -47,6 +53,7 @@ const getStudentResults = async (req, res) => {
         totalMarks: r.examId.totalMarks,
         marksObtained: r.marksObtained,
         percentage: percentage.toFixed(2),
+        grade: grade,
         status: r.status,
       };
     });
@@ -57,4 +64,4 @@ const getStudentResults = async (req, res) => {
   }
 };
 
-module.exports = { enterMarks ,getStudentResults};
+module.exports = { enterMarks, getStudentResults };

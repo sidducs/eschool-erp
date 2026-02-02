@@ -25,7 +25,7 @@ exports.addBook = async (req, res) => {
     const newBook = new Book({
       title, author, isbn, description, category,
       totalCopies, availableCopies: totalCopies, location,
-      embedding: embedding 
+      embedding: embedding
     });
 
     await newBook.save();
@@ -37,59 +37,94 @@ exports.addBook = async (req, res) => {
 
 exports.smartSearch = async (req, res) => {
   try {
-    const { query } = req.query;
-    if (!query) return res.status(400).json({ message: "Search query is required" });
-    const queryVector = await getAIEmbedding(query);
+    const { query, sort } = req.query;
 
-    const results = await Book.aggregate([
-      {
-        $vectorSearch: {
-          index: "vector_index",
-          path: "embedding",
-          queryVector: queryVector,
-          numCandidates: 100,
-          limit: 10
-        }
-      },
-      { $project: { embedding: 0, score: { $meta: "vectorSearchScore" } } }
-    ]);
+    let filter = {};
+    if (query) {
+      const regex = new RegExp(query, 'i');
+      filter = {
+        $or: [
+          { title: regex },
+          { author: regex },
+          { isbn: regex },
+          { category: regex }
+        ]
+      };
+    }
+
+    let sortOption = { createdAt: -1 }; // Default: Newest first
+    if (sort === "title_asc") sortOption = { title: 1 };
+    if (sort === "title_desc") sortOption = { title: -1 };
+    if (sort === "author_asc") sortOption = { author: 1 };
+    if (sort === "available") sortOption = { availableCopies: -1 };
+
+    const results = await Book.find(filter).sort(sortOption).limit(100);
+
     res.json(results);
   } catch (err) {
-    res.status(500).json({ error: "Search failed. Check Atlas Index." });
+    res.status(500).json({ error: "Search failed." });
+  }
+};
+
+exports.getMyBooks = async (req, res) => {
+  try {
+    // History of books issued to the logged-in user
+    const transactions = await Transaction.find({
+      studentId: req.user._id,
+      status: 'Issued'
+    }).populate("bookId").sort({ dueDate: 1 });
+
+    res.json(transactions);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };
 
 exports.issueBook = async (req, res) => {
   try {
-    const { bookId, rollNumber } = req.body;
+    const { bookId, admissionId } = req.body;
 
-    // Convert rollNumber to Number for comparison
-    const student = await User.findOne({ rollNumber: Number(rollNumber), role: 'student' });
+    // Find Book
+    const book = await Book.findById(bookId);
+    if (!book) return res.status(404).json({ message: "Book not found" });
+
+    if (book.availableCopies < 1) {
+      return res.status(400).json({ message: "Book is not available" });
+    }
+
+    // Find Student by SRN (admissionId) 
+    // Fallback: Check if client sent rollNumber variable as legacy
+    const searchId = admissionId || req.body.rollNumber;
+    const student = await User.findOne({ admissionId: searchId, role: "student" });
 
     if (!student) {
-      return res.status(404).json({ message: "No student found with this Roll Number." });
+      return res.status(404).json({ message: `Student with SRN '${searchId}' not found.` });
     }
 
-    const book = await Book.findById(bookId);
-    if (!book || book.availableCopies <= 0) {
-      return res.status(400).json({ message: "Book is not available." });
-    }
-
-    const dueDate = new Date();
-    dueDate.setDate(dueDate.getDate() + 14);
-
-    const transaction = new Transaction({
+    // Check if already issued
+    const alreadyIssued = await Transaction.findOne({
       bookId,
       studentId: student._id,
-      dueDate,
-      status: 'Issued'
+      status: "Issued"
     });
 
+    if (alreadyIssued) {
+      return res.status(400).json({ message: "Student already has this book issued." });
+    }
+
+    // Create Transaction
+    await Transaction.create({
+      bookId,
+      studentId: student._id,
+      issueDate: new Date(),
+      dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
+    });
+
+    // Decrement copies
     book.availableCopies -= 1;
     await book.save();
-    await transaction.save();
 
-    res.json({ message: `Success: Issued to ${student.name}`, dueDate });
+    res.json({ message: `Success: Issued to ${student.name}`, dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) });
   } catch (err) {
     console.error("Issuance Error:", err);
     res.status(500).json({ message: "Server error during issuance: " + err.message });

@@ -1,68 +1,23 @@
-// export default Login;
 import { useState, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../services/api";
 import { AuthContext } from "../context/AuthContext";
-import { ToastContext } from "../context/ToastContext"; // Kept your context
+import { useToast } from "../context/ToastContext";
 import { FaEnvelope, FaLock, FaUniversity, FaSignInAlt } from "react-icons/fa";
 
 function Login() {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(""); // Local error state for better UI control
-  
-  const { showToast } = useContext(ToastContext);
+  const [error, setError] = useState("");
+
+  const { addToast } = useToast();
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({ email: "", password: "" });
 
-  // --- STYLES ---
-  const styles = {
-    container: {
-      minHeight: "100vh",
-      background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)", // Matches Landing Page
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontFamily: "'Inter', sans-serif",
-      padding: "20px"
-    },
-    card: {
-      maxWidth: "450px",
-      width: "100%",
-      backgroundColor: "white",
-      borderRadius: "12px",
-      boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
-      overflow: "hidden",
-      border: "1px solid #e2e8f0"
-    },
-    header: {
-      backgroundColor: "#f8fafc",
-      padding: "2rem",
-      textAlign: "center",
-      borderBottom: "1px solid #e2e8f0"
-    },
-    formSection: {
-      padding: "2rem"
-    },
-    inputGroupText: {
-      backgroundColor: "#f1f5f9",
-      borderRight: "none",
-      color: "#64748b",
-      borderColor: "#e2e8f0"
-    },
-    input: {
-      borderLeft: "none",
-      borderColor: "#e2e8f0",
-      padding: "0.75rem",
-      fontSize: "0.95rem",
-      backgroundColor: "#f8fafc"
-    }
-  };
-
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    setError(""); // Clear error when user types
+    setError("");
   };
 
   const handleSubmit = async (e) => {
@@ -73,56 +28,53 @@ function Login() {
     try {
       const res = await api.post("/api/auth/login", formData);
       await login(res.data.token);
-      
-      // Optional: Use toast if you prefer, or just navigate
-      if(showToast) showToast("Login successful", "success");
 
-      // Redirect based on role
+      addToast("Login successful", "success");
+
       if (res.data.role === "admin") navigate("/admin");
       else if (res.data.role === "teacher") navigate("/teacher");
       else navigate("/student");
 
     } catch (err) {
-      // Set local error to display in the form
       setError(err.response?.data?.message || "Invalid email or password");
-      if(showToast) showToast("Login failed", "danger");
+      addToast("Login failed", "error");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 p-4 font-sans">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden transform transition-all">
+
         {/* Header */}
-        <div style={styles.header}>
-           <div className="bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style={{width: '60px', height: '60px'}}>
-              <FaUniversity size={28} />
-           </div>
-           <h4 className="fw-bold text-dark mb-1">Welcome Back</h4>
-           <p className="text-muted small mb-0">Sign in to your ESchool account</p>
+        <div className="bg-slate-50 py-8 px-6 text-center border-b border-slate-100">
+          <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
+            <FaUniversity size={30} />
+          </div>
+          <h4 className="text-2xl font-bold text-slate-800 mb-1">Welcome Back</h4>
+          <p className="text-slate-500 text-sm">Sign in to your ESchool account</p>
         </div>
 
         {/* Form */}
-        <div style={styles.formSection}>
-          
+        <div className="p-8">
           {error && (
-            <div className="alert alert-danger py-2 small text-center border-0 bg-danger bg-opacity-10 text-danger mb-4">
+            <div className="mb-6 p-3 rounded-lg bg-red-50 border border-red-100 text-red-600 text-sm text-center font-medium animate-pulse">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit}>
-            <div className="mb-3">
-              <label className="form-label text-muted small fw-bold text-uppercase" style={{fontSize: '0.75rem'}}>Email Address</label>
-              <div className="input-group">
-                <span className="input-group-text" style={styles.inputGroupText}><FaEnvelope /></span>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Email Address</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <FaEnvelope className="text-slate-400" />
+                </div>
                 <input
                   type="email"
                   name="email"
-                  className="form-control shadow-none"
-                  style={styles.input}
+                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-sm font-medium text-slate-700"
                   placeholder="name@school.com"
                   onChange={handleChange}
                   required
@@ -130,15 +82,16 @@ function Login() {
               </div>
             </div>
 
-            <div className="mb-4">
-              <label className="form-label text-muted small fw-bold text-uppercase" style={{fontSize: '0.75rem'}}>Password</label>
-              <div className="input-group">
-                <span className="input-group-text" style={styles.inputGroupText}><FaLock /></span>
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Password</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <FaLock className="text-slate-400" />
+                </div>
                 <input
                   type="password"
                   name="password"
-                  className="form-control shadow-none"
-                  style={styles.input}
+                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-sm font-medium text-slate-700"
                   placeholder="••••••••"
                   onChange={handleChange}
                   required
@@ -146,18 +99,32 @@ function Login() {
               </div>
             </div>
 
-            <button className="btn btn-primary w-100 py-2 fw-bold shadow-sm" disabled={loading}>
+            <button
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-0.5 flex items-center justify-center"
+              disabled={loading}
+            >
               {loading ? (
-                 <>Please wait...</>
+                <span className="flex items-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Signing in...
+                </span>
               ) : (
-                 <><FaSignInAlt className="me-2"/> Login to Dashboard</>
+                <span className="flex items-center">
+                  <FaSignInAlt className="mr-2" /> Login to Dashboard
+                </span>
               )}
             </button>
           </form>
 
-          <div className="text-center mt-4 pt-3 border-top">
-             <span className="text-muted small">New to ESchool? </span>
-             <Link to="/register" className="text-decoration-none fw-bold ms-1 text-primary">Create Account</Link>
+          <div className="text-center mt-8 pt-6 border-t border-slate-100">
+            <p className="text-slate-500 text-sm">
+              New to ESchool?
+              <Link to="/register" className="text-blue-600 hover:text-blue-700 font-bold ml-1 transition-colors">Create Account</Link>
+            </p>
           </div>
         </div>
       </div>

@@ -1,11 +1,10 @@
+import { FaSpinner } from "react-icons/fa";
+
 function Loader({ text = "Loading..." }) {
   return (
-    <div
-      className="d-flex flex-column justify-content-center align-items-center"
-      style={{ minHeight: "200px" }}
-    >
-      <div className="spinner-border text-dark mb-2" role="status" />
-      <span className="text-muted">{text}</span>
+    <div className="flex flex-col justify-center items-center h-48 w-full">
+      <FaSpinner className="animate-spin text-blue-600 text-3xl mb-3" />
+      <span className="text-slate-500 font-medium text-sm animate-pulse">{text}</span>
     </div>
   );
 }

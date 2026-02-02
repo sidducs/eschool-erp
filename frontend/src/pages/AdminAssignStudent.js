@@ -1,33 +1,40 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
+import { useToast } from "../context/ToastContext";
 
 function AdminAssignStudent() {
   const [students, setStudents] = useState([]);
   const [classes, setClasses] = useState([]);
-  const [studentId, setStudentId] = useState("");
-  const [classId, setClassId] = useState("");
+  const [selectedStudent, setSelectedStudent] = useState(""); // Changed from studentId
+  const [selectedClass, setSelectedClass] = useState(""); // Changed from classId
   const [rollNumber, setRollNumber] = useState("");
+  const { addToast } = useToast(); // Added useToast hook
 
   useEffect(() => {
-    const fetchData = async () => {
-      const s = await api.get("/api/admin/users");
-      const c = await api.get("/api/classes");
-      setStudents(s.data.filter((u) => u.role === "student"));
-      setClasses(c.data);
-    };
-    fetchData();
+    // Load Classes and Students (mock or real endpoint)
+    api.get("/api/classes").then((res) => setClasses(res.data));
+    api.get("/api/admin/users").then((res) => {
+      setStudents(res.data.filter((u) => u.role === "student"));
+    });
   }, []);
 
   const submitHandler = async (e) => {
     e.preventDefault();
 
-    await api.post("/api/classes/assign-student", {
-      studentId,
-      classId,
-      rollNumber,
-    });
-
-    alert("Student assigned to class");
+    try {
+      await api.post("/api/classes/assign-student", {
+        studentId: selectedStudent, // Using selectedStudent
+        classId: selectedClass, // Using selectedClass
+        rollNumber,
+      });
+      addToast("Student assigned to class", "success"); // Replaced alert with addToast
+      // Optionally clear form fields after successful assignment
+      setSelectedStudent("");
+      setSelectedClass("");
+      setRollNumber("");
+    } catch (err) {
+      addToast("Failed to assign student", "error"); // Added error toast
+    }
   };
 
   return (
@@ -49,8 +56,8 @@ function AdminAssignStudent() {
               <label className="form-label text-muted">Student</label>
               <select
                 className="form-select"
-                value={studentId}
-                onChange={(e) => setStudentId(e.target.value)}
+                value={selectedStudent}
+                onChange={(e) => setSelectedStudent(e.target.value)}
                 required
               >
                 <option value="">Select Student</option>
@@ -66,8 +73,8 @@ function AdminAssignStudent() {
               <label className="form-label text-muted">Class</label>
               <select
                 className="form-select"
-                value={classId}
-                onChange={(e) => setClassId(e.target.value)}
+                value={selectedClass}
+                onChange={(e) => setSelectedClass(e.target.value)}
                 required
               >
                 <option value="">Select Class</option>

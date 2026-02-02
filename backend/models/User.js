@@ -28,6 +28,13 @@ const userSchema = new mongoose.Schema(
       default: "student",
     },
 
+    // 🚦 Account Status (For Hybrid Registration)
+    status: {
+      type: String,
+      enum: ["pending", "active", "rejected"],
+      default: "pending", // Students start as pending until approved
+    },
+
     // 🎓 Student-specific fields
     classId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -43,6 +50,29 @@ const userSchema = new mongoose.Schema(
     rollNumber: {
       type: Number,
       default: null,
+    },
+
+    // 📌 Personal Details
+    fatherName: { type: String, default: null },
+    motherName: { type: String, default: null },
+    dob: { type: Date, default: null },
+    bloodGroup: { type: String, default: null },
+    address: { type: String, default: null },
+    phoneNumber: { type: String, default: null },
+
+    // 🏫 Admission Details
+    admissionId: {
+      type: String,
+      unique: true,
+      sparse: true // Allows null/undefined for non-students
+    },
+
+    // 📂 Documents
+    profilePicture: { type: String, default: null },
+    documents: {
+      transferCertificate: { type: String, default: null },
+      previousMarksheet: { type: String, default: null },
+      birthCertificate: { type: String, default: null }
     },
   },
   { timestamps: true }

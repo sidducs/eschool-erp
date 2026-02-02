@@ -20,7 +20,7 @@ const {
   generateMyFeeReceipt,
 } = require("../controllers/receiptController");
 
-// ================= ADMIN =================
+// ADMIN ROUTES
 router.post("/", protect, isAdmin, createFeeStructure);
 router.get("/", protect, isAdmin, getFeeStructures);
 
@@ -30,10 +30,10 @@ router.get("/student-fees", protect, isAdmin, getAllStudentFees);
 
 router.put("/pay", protect, isAdmin, updatePayment);
 
-// ================= STUDENT =================
+// STUDENT ROUTES
 router.get("/my-fee", protect, getMyFee);
 
-// ===== RECEIPTS =====
+// RECEIPTS
 
 // STUDENT → download own receipt (ORDER MATTERS)
 router.get(

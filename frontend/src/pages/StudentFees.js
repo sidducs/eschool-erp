@@ -2,6 +2,7 @@ import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { AuthContext } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 
 import {
   FaBars,
@@ -16,6 +17,7 @@ import {
 function StudentDashboard() {
   const navigate = useNavigate();
   const { logout, user } = useContext(AuthContext);
+  const { addToast } = useToast();
 
   const [activeMenu, setActiveMenu] = useState("dashboard");
   const [showMenu, setShowMenu] = useState(true);
@@ -49,16 +51,15 @@ function StudentDashboard() {
       link.download = "my-fee-receipt.pdf";
       link.click();
     } catch {
-      alert("Failed to download receipt");
+      addToast("Failed to download receipt", "error");
     }
   };
 
   const MenuButton = ({ icon: Icon, label, name, onClick }) => (
     <button
       type="button"
-      className={`btn w-100 text-start mb-2 ${
-        activeMenu === name ? "btn-secondary" : "btn-dark"
-      }`}
+      className={`btn w-100 text-start mb-2 ${activeMenu === name ? "btn-secondary" : "btn-dark"
+        }`}
       onClick={onClick}
     >
       <Icon className="me-2" />
@@ -226,11 +227,10 @@ function StudentDashboard() {
                     <div className="col-5 text-muted">Status</div>
                     <div className="col-7">
                       <span
-                        className={`badge ${
-                          fee.status === "PAID"
+                        className={`badge ${fee.status === "PAID"
                             ? "bg-success"
                             : "bg-danger"
-                        }`}
+                          }`}
                       >
                         {fee.status}
                       </span>

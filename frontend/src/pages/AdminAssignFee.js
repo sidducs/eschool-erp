@@ -1,29 +1,38 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
+import { useToast } from "../context/ToastContext";
 
 function AdminAssignFee() {
   const [students, setStudents] = useState([]);
-  const [studentId, setStudentId] = useState("");
+  const [selectedStudent, setSelectedStudent] = useState("");
+  const [amount, setAmount] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [type, setType] = useState("Tuition Fee");
+  const { addToast } = useToast();
 
   useEffect(() => {
-    const fetchStudents = async () => {
-      const res = await api.get("/api/admin/users");
+    api.get("/api/admin/users").then((res) => {
       setStudents(res.data.filter((u) => u.role === "student"));
-    };
-    fetchStudents();
+    });
   }, []);
 
-  const assignFee = async () => {
-    if (!studentId) {
-      alert("Select a student");
+  const handleAssign = async (e) => {
+    e.preventDefault();
+    if (!selectedStudent) {
+      addToast("Select a student", "warning");
       return;
     }
 
     try {
-      await api.post("/api/fees/assign", { studentId });
-      alert("Fee assigned to student");
+      await api.post("/api/fees/assign", {
+        studentId: selectedStudent,
+        amount,
+        dueDate,
+        type,
+      });
+      addToast("Fee assigned to student", "success");
     } catch (error) {
-      alert(error.response?.data?.message || "Error assigning fee");
+      addToast(error.response?.data?.message || "Error assigning fee", "error");
     }
   };
 
@@ -44,8 +53,8 @@ function AdminAssignFee() {
           <label className="form-label text-muted">Student</label>
           <select
             className="form-select"
-            value={studentId}
-            onChange={(e) => setStudentId(e.target.value)}
+            value={selectedStudent}
+            onChange={(e) => setSelectedStudent(e.target.value)}
           >
             <option value="">Select Student</option>
             {students.map((s) => (

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useContext } from "react";
-import { AuthContext } from "./context/AuthContext";
+import { AuthProvider, AuthContext } from "./context/AuthContext";
+import { ToastProvider } from "./context/ToastContext";
 import LandingPage from "./pages/LandingPage";
 
 import Register from "./pages/Register";
@@ -12,11 +13,14 @@ import TeacherEnterMarks from "./pages/TeacherEnterMarks";
 import TeacherTimetable from "./pages/TeacherTimetable";
 
 import StudentDashboard from "./pages/StudentDashboard";
-import LibraryDashboard from "./pages/LibraryDashboard"; // Check this line
+import StudentProfileCompletion from "./pages/StudentProfileCompletion";
+import LibraryDashboard from "./pages/LibraryDashboard";
+import FeeReceiptView from "./pages/FeeReceiptView";
+import Profile from "./pages/Profile";
 
 function AppWrapper() {
   const { token, user, loading } = useContext(AuthContext);
-  
+
   if (loading) {
     return <p style={{ padding: "20px" }}>Loading...</p>;
   }
@@ -26,6 +30,7 @@ function AppWrapper() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/profile" element={token ? <Profile /> : <Navigate to="/login" />} />
 
       {/* Admin */}
       <Route
@@ -40,19 +45,27 @@ function AppWrapper() {
       <Route path="/teacher/timetable" element={token && user?.role === "teacher" ? <TeacherTimetable /> : <Navigate to="/login" />} />
 
       {/* Student & General */}
-      <Route path="/student" element={token && user?.role === "student" ? <StudentDashboard /> : <Navigate to="/login" />} />
+      <Route path="/student" element={token && user?.role === "student" ? (user.status === 'pending' ? <Navigate to="/student/complete-profile" /> : <StudentDashboard />) : <Navigate to="/login" />} />
+      <Route path="/student/complete-profile" element={token && user?.role === "student" ? (user.status === 'active' ? <Navigate to="/student" /> : <StudentProfileCompletion />) : <Navigate to="/login" />} />
       <Route path="/library" element={<LibraryDashboard />} />
-      
+      <Route path="/receipt/:id" element={<FeeReceiptView />} />
+
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/login" />} />
     </Routes>
   );
 }
 
+
+
 export default function App() {
   return (
     <BrowserRouter>
-      <AppWrapper />
+      <ToastProvider>
+        <AuthProvider>
+          <AppWrapper />
+        </AuthProvider>
+      </ToastProvider>
     </BrowserRouter>
   );
 }

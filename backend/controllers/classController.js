@@ -26,7 +26,7 @@ const createClass = async (req, res) => {
 // Assign student to class (Admin)
 const assignStudentToClass = async (req, res) => {
   try {
-    const { studentId, classId, rollNumber } = req.body;
+    const { studentId, classId } = req.body;
 
     const student = await User.findById(studentId);
     if (!student || student.role !== "student") {
@@ -34,7 +34,10 @@ const assignStudentToClass = async (req, res) => {
     }
 
     student.classId = classId;
-    student.rollNumber = rollNumber;
+    // rollNumber is now optional/auto-managed or not used if SRN is primary
+    if (req.body.rollNumber) {
+      student.rollNumber = req.body.rollNumber;
+    }
 
     await student.save();
 

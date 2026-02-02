@@ -5,7 +5,9 @@ const {
   getAllUsers,
   createUser,
   deleteUser,
-  updateUser
+  updateUser,
+  approveStudent,
+  resetPassword
 } = require("../controllers/adminController");
 const { getAllStudents } = require("../controllers/adminController");
 const { getAttendanceReport } = require("../controllers/reportController");
@@ -17,5 +19,7 @@ router.post("/users", protect, isAdmin, createUser);
 router.delete("/users/:id", protect, isAdmin, deleteUser);
 router.get("/attendance", protect, isAdmin, getAttendanceReport);
 router.put("/users/:id", protect, isAdmin, updateUser);
+router.put("/approve/:id", protect, isAdmin, approveStudent); // Approval Route
+router.put("/reset-password/:id", protect, isAdmin, resetPassword);
 
 module.exports = router;

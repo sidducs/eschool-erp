@@ -2,12 +2,10 @@ const FeeStructure = require("../models/FeeStructure");
 const StudentFee = require("../models/StudentFee");
 const User = require("../models/User");
 
-// ===============================
-// ADMIN → CREATE / UPDATE FEE STRUCTURE
-// ===============================
+// Create or update fee structure
 const createFeeStructure = async (req, res) => {
   try {
-    const { classId, totalFee, description } = req.body;
+    const { classId, totalFee, description, breakdown } = req.body;
 
     if (!classId || !totalFee) {
       return res.status(400).json({ message: "Missing fields" });
@@ -15,7 +13,7 @@ const createFeeStructure = async (req, res) => {
 
     const fee = await FeeStructure.findOneAndUpdate(
       { classId },
-      { totalFee, description },
+      { totalFee, description, breakdown },
       { upsert: true, new: true }
     );
 
@@ -25,9 +23,7 @@ const createFeeStructure = async (req, res) => {
   }
 };
 
-// ===============================
-// ADMIN → GET ALL FEE STRUCTURES
-// ===============================
+// Get all fee structures
 const getFeeStructures = async (req, res) => {
   try {
     const fees = await FeeStructure.find().populate("classId");
@@ -37,9 +33,7 @@ const getFeeStructures = async (req, res) => {
   }
 };
 
-// ===============================
-// ADMIN → ASSIGN FEE TO STUDENT
-// ===============================
+// Assign fee to student
 const assignFeeToStudent = async (req, res) => {
   try {
     const { studentId } = req.body;
@@ -77,9 +71,7 @@ const assignFeeToStudent = async (req, res) => {
   }
 };
 
-// ===============================
-// ADMIN → UPDATE PAYMENT STATUS
-// ===============================
+// Update payment status
 const updatePayment = async (req, res) => {
   try {
     const { studentId, paidAmount } = req.body;
@@ -100,13 +92,11 @@ const updatePayment = async (req, res) => {
   }
 };
 
-// ===============================
-// ADMIN → GET ALL STUDENT FEES
-// ===============================
+// Get all student fees
 const getAllStudentFees = async (req, res) => {
   try {
     const fees = await StudentFee.find()
-      .populate("studentId", "name email")
+      .populate("studentId", "name email admissionId")
       .populate("classId", "name section");
 
     res.json(fees);
@@ -115,28 +105,32 @@ const getAllStudentFees = async (req, res) => {
   }
 };
 
-// ===============================
-// STUDENT → GET MY FEE
-// ===============================
+// Get my fee (Student)
 const getMyFee = async (req, res) => {
   try {
     const fee = await StudentFee.findOne({
       studentId: req.user._id,
-    }).populate("classId", "name section");
+    })
+      .populate("studentId", "name email admissionId")
+      .populate("classId", "name section");
 
     if (!fee) {
       return res.status(404).json({ message: "Fee not assigned" });
     }
 
-    res.json(fee);
+    // Fetch breakdown structure for this class
+    const structure = await FeeStructure.findOne({ classId: fee.classId._id });
+
+    res.json({
+      ...fee.toObject(),
+      breakdown: structure ? structure.breakdown : []
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// ===============================
-// EXPORT EVERYTHING (VERY IMPORTANT)
-// ===============================
+
 module.exports = {
   createFeeStructure,
   getFeeStructures,
@@ -145,4 +139,3 @@ module.exports = {
   getAllStudentFees,
   getMyFee,
 };
-

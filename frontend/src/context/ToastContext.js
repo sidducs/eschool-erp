@@ -1,113 +1,58 @@
-import { createContext, useState, useCallback } from "react";
-import { FaCheckCircle, FaExclamationCircle, FaInfoCircle, FaExclamationTriangle, FaTimes } from "react-icons/fa";
+import React, { createContext, useContext, useState, useCallback } from "react";
+import { FaCheckCircle, FaExclamationCircle, FaInfoCircle, FaTimes } from "react-icons/fa";
 
-export const ToastContext = createContext();
+const ToastContext = createContext();
+
+export const useToast = () => useContext(ToastContext);
 
 export const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
 
-  const showToast = useCallback((message, type = "info") => {
+  const addToast = useCallback((message, type = "info") => {
     const id = Date.now();
     setToasts((prev) => [...prev, { id, message, type }]);
 
-    // Auto-remove after 3 seconds
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 3000);
+    }, 4000);
   }, []);
 
-  const removeToast = (id) => {
+  const removeToast = useCallback((id) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
-  };
-
-  // --- STYLES ---
-  const styles = {
-    container: {
-      position: "fixed",
-      top: "20px",
-      right: "20px",
-      zIndex: 9999,
-      display: "flex",
-      flexDirection: "column",
-      gap: "10px",
-    },
-    toast: (type) => ({
-      minWidth: "320px",
-      backgroundColor: "white",
-      borderRadius: "8px",
-      boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-      padding: "16px",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      borderLeft: `5px solid ${
-        type === "success" ? "#10b981" : 
-        type === "danger" ? "#ef4444" : 
-        type === "warning" ? "#f59e0b" : "#3b82f6"
-      }`,
-      animation: "slideIn 0.3s ease-out forwards",
-      fontFamily: "'Inter', sans-serif",
-    }),
-    content: {
-      display: "flex",
-      alignItems: "center",
-      gap: "12px",
-    },
-    message: {
-      fontSize: "0.95rem",
-      color: "#1f2937",
-      fontWeight: "500",
-      margin: 0,
-    },
-    closeBtn: {
-      background: "transparent",
-      border: "none",
-      color: "#9ca3af",
-      cursor: "pointer",
-      padding: "4px",
-      display: "flex",
-      alignItems: "center",
-    }
-  };
-
-  // Icon Helper
-  const getIcon = (type) => {
-    switch(type) {
-        case "success": return <FaCheckCircle color="#10b981" size={20} />;
-        case "danger": return <FaExclamationCircle color="#ef4444" size={20} />;
-        case "warning": return <FaExclamationTriangle color="#f59e0b" size={20} />;
-        default: return <FaInfoCircle color="#3b82f6" size={20} />;
-    }
-  };
+  }, []);
 
   return (
-    <ToastContext.Provider value={{ showToast }}>
+    <ToastContext.Provider value={{ addToast }}>
       {children}
-      
-      {/* Toast Container */}
-      <div style={styles.container}>
+      <div className="fixed top-5 right-5 z-50 flex flex-col gap-3">
         {toasts.map((toast) => (
-          <div key={toast.id} style={styles.toast(toast.type)} className="toast-item">
-            <div style={styles.content}>
-               {getIcon(toast.type)}
-               <p style={styles.message}>{toast.message}</p>
+          <div
+            key={toast.id}
+            className={`min-w-[300px] max-w-sm flex items-center p-4 rounded-xl shadow-2xl animate-bounceIn border-l-4 transition-all transform hover:scale-105
+              ${toast.type === "success" ? "bg-white border-green-500 text-slate-800" : ""}
+              ${toast.type === "error" || toast.type === "danger" ? "bg-white border-red-500 text-slate-800" : ""}
+              ${toast.type === "warning" ? "bg-white border-amber-500 text-slate-800" : ""}
+              ${toast.type === "info" ? "bg-white border-blue-500 text-slate-800" : ""}
+            `}
+          >
+            <div className="mr-3 text-xl">
+              {toast.type === "success" && <FaCheckCircle className="text-green-500" />}
+              {(toast.type === "error" || toast.type === "danger") && <FaExclamationCircle className="text-red-500" />}
+              {toast.type === "warning" && <FaExclamationCircle className="text-amber-500" />}
+              {toast.type === "info" && <FaInfoCircle className="text-blue-500" />}
             </div>
-            <button style={styles.closeBtn} onClick={() => removeToast(toast.id)}>
+            <div className="flex-1 text-sm font-bold">
+              {toast.message}
+            </div>
+            <button
+              onClick={() => removeToast(toast.id)}
+              className="ml-3 text-slate-400 hover:text-slate-600"
+            >
               <FaTimes />
             </button>
           </div>
         ))}
       </div>
-
-      {/* Inline Animation Style */}
-      <style>
-        {`
-          @keyframes slideIn {
-            from { opacity: 0; transform: translateX(100%); }
-            to { opacity: 1; transform: translateX(0); }
-          }
-        `}
-      </style>
     </ToastContext.Provider>
   );
 };

@@ -3,12 +3,14 @@ import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import EmptyState from "../components/EmptyState";
 import ConfirmModal from "../components/ConfirmModal";
+import { useToast } from "../context/ToastContext";
 
 function AdminStudentFees() {
   const [fees, setFees] = useState([]);
   const [paymentInputs, setPaymentInputs] = useState({});
   const [showPayConfirm, setShowPayConfirm] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState(null);
+  const { addToast } = useToast();
 
   const navigate = useNavigate();
 
@@ -17,7 +19,7 @@ function AdminStudentFees() {
       const res = await api.get("/api/fees/student-fees");
       setFees(res.data);
     } catch {
-      alert("Failed to load student fees");
+      addToast("Failed to load student fees", "error");
     }
   };
 
@@ -33,12 +35,13 @@ function AdminStudentFees() {
         studentId: selectedStudentId,
         paidAmount: paymentInputs[selectedStudentId],
       });
-      
+
+      addToast("Payment updated successfully", "success");
       setShowPayConfirm(false);
       setSelectedStudentId(null);
       fetchFees();
     } catch {
-      alert("Failed to update payment");
+      addToast("Failed to update payment", "error");
     }
   };
 
@@ -56,13 +59,13 @@ function AdminStudentFees() {
       link.download = "fee-receipt.pdf";
       link.click();
     } catch {
-      alert("Failed to download receipt");
+      addToast("Failed to download receipt", "error");
     }
   };
 
   return (
     <>
-    
+
       <div className="container mt-4">
         <h3>Student Fees</h3>
 

@@ -3,385 +3,494 @@ import api from "../services/api";
 import { AuthContext } from "../context/AuthContext";
 import Loader from "../components/Loader";
 import AlertMessage from "../components/AlertMessage";
-import { 
-  FaChalkboardTeacher, FaClipboardCheck,  FaCalendarAlt, 
-  FaUserGraduate, FaBell, FaSignOutAlt, FaBars, FaCheckCircle, 
-   FaSave, FaMagic, FaSpinner, FaBullhorn, FaBookReader 
+import {
+   FaChalkboardTeacher, FaClipboardCheck, FaCalendarAlt,
+   FaUserGraduate, FaBell, FaSignOutAlt, FaBars, FaCheckCircle,
+   FaSave, FaMagic, FaSpinner, FaBullhorn, FaBookReader, FaTimes
 } from "react-icons/fa";
 
-import LibraryDashboard from "./LibraryDashboard"; 
+import LibraryDashboard from "./LibraryDashboard";
+import TeacherTimetable from "./TeacherTimetable";
 
 function TeacherDashboard() {
-  const { user, logout } = useContext(AuthContext);
+   const { user, logout } = useContext(AuthContext);
 
-  // --- STATE ---
-  const [loading, setLoading] = useState(true);
-  const [activeMenu, setActiveMenu] = useState("dashboard");
-  const [showSidebar, setShowSidebar] = useState(true);
-  const [refreshKey, setRefreshKey] = useState(0); 
-  
-  // Data States
-  const [data, setData] = useState({ classes: [], exams: [], timetable: [] });
-  const [notices, setNotices] = useState([]); // <--- NOTICE STATE
-  const [students, setStudents] = useState([]); 
-  const [selection, setSelection] = useState({ classId: "", date: "", examId: "" });
-  
-  // Form Maps
-  const [attendanceMap, setAttendanceMap] = useState({});
-  const [marksMap, setMarksMap] = useState({});
-  const [remarksMap, setRemarksMap] = useState({}); 
-  
-  // UI States
-  const [alertInfo, setAlertInfo] = useState({ show: false, type: "", msg: "" });
-  const [aiLoading, setAiLoading] = useState({}); 
+   // State
+   const [loading, setLoading] = useState(true);
+   const [activeMenu, setActiveMenu] = useState("dashboard");
+   const [showSidebar, setShowSidebar] = useState(window.innerWidth > 1024);
+   const [refreshKey, setRefreshKey] = useState(0);
 
-  // --- STYLES ---
-  const styles = {
-    font: { fontFamily: "'Inter', sans-serif" },
-    sidebar: { backgroundColor: "#1e293b", minHeight: "100vh", color: "#f8fafc" },
-    main: { backgroundColor: "#f8fafc", minHeight: "100vh" }, 
-    card: { border: "1px solid #e2e8f0", borderRadius: "12px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)", background: "white" },
-    labelText: { color: "#64748b", fontSize: "0.75rem", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.5px" },
-    tableHeader: { backgroundColor: "#f1f5f9", color: "#475569", fontSize: "0.8rem", fontWeight: "700", textTransform: "uppercase" },
-    menuBtn: (isActive) => ({
-      backgroundColor: isActive ? "#3b82f6" : "transparent",
-      color: isActive ? "white" : "#cbd5e1",
-      border: "none", padding: "12px 16px", width: "100%", textAlign: "left",
-      borderRadius: "8px", marginBottom: "6px", fontSize: "0.95rem", fontWeight: "500",
-      transition: "all 0.2s"
-    })
-  };
+   // Data States
+   const [data, setData] = useState({ classes: [], exams: [], timetable: [] });
+   const [notices, setNotices] = useState([]);
+   const [students, setStudents] = useState([]);
+   const [selection, setSelection] = useState({ classId: "", date: "", examId: "" });
 
-  // --- FETCH DATA ---
-  useEffect(() => {
-    const loadData = async () => {
+   // Form Maps
+   const [attendanceMap, setAttendanceMap] = useState({});
+   const [marksMap, setMarksMap] = useState({});
+   const [remarksMap, setRemarksMap] = useState({});
+
+   // UI States
+   const [alertInfo, setAlertInfo] = useState({ show: false, type: "", msg: "" });
+   const [aiLoading, setAiLoading] = useState({});
+
+   // Fetch Data
+   useEffect(() => {
+      const handleResize = () => {
+         if (window.innerWidth > 1024) setShowSidebar(true);
+         else setShowSidebar(false);
+      };
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+   }, []);
+
+   useEffect(() => {
+      const loadData = async () => {
+         try {
+            const results = await Promise.allSettled([
+               api.get("/api/classes"),
+               api.get("/api/exams"),
+               api.get("/api/timetable/teacher"),
+               api.get("/api/notices")
+            ]);
+
+            setData({
+               classes: results[0].status === 'fulfilled' ? results[0].value.data : [],
+               exams: results[1].status === 'fulfilled' ? results[1].value.data : [],
+               timetable: results[2].status === 'fulfilled' ? results[2].value.data : []
+            });
+
+            if (results[3].status === 'fulfilled') {
+               setNotices(results[3].value.data);
+            }
+
+         } catch (err) { console.error(err); }
+         finally { setLoading(false); }
+      };
+      loadData();
+   }, [refreshKey]);
+
+   const showAlert = (type, msg) => { setAlertInfo({ show: true, type, msg }); setTimeout(() => setAlertInfo({ show: false }), 3000); };
+
+   // Attendance Logic
+   const fetchStudentsForClass = async (classId) => {
+      setSelection(prev => ({ ...prev, classId }));
+      setStudents([]); setAttendanceMap({});
+      if (!classId) return;
       try {
-        const results = await Promise.allSettled([
-          api.get("/api/classes"),
-          api.get("/api/exams"),
-          api.get("/api/timetable/teacher"),
-          api.get("/api/notices") // <--- Fetch Notices
-        ]);
-        
-        setData({
-          classes: results[0].status === 'fulfilled' ? results[0].value.data : [],
-          exams: results[1].status === 'fulfilled' ? results[1].value.data : [],
-          timetable: results[2].status === 'fulfilled' ? results[2].value.data : []
-        });
+         const res = await api.get(`/api/classes/${classId}/students`);
+         setStudents(res.data);
+      } catch { showAlert("danger", "Failed to load students"); }
+   };
 
-        if (results[3].status === 'fulfilled') {
-            setNotices(results[3].value.data);
-        }
+   const markAttendance = (studentId, status) => {
+      setAttendanceMap(prev => ({ ...prev, [studentId]: status }));
+   };
 
-      } catch (err) { console.error(err); } 
-      finally { setLoading(false); }
-    };
-    loadData();
-  }, [refreshKey]);
+   const submitAttendance = async () => {
+      if (!selection.classId || !selection.date) return showAlert("warning", "Select Class and Date");
+      try {
+         await Promise.all(Object.keys(attendanceMap).map(sid =>
+            api.post("/api/attendance", { studentId: sid, classId: selection.classId, date: selection.date, status: attendanceMap[sid] })
+         ));
+         showAlert("success", "Attendance Saved");
+         setStudents([]); setAttendanceMap({}); setSelection(prev => ({ ...prev, classId: "" }));
+         setRefreshKey(k => k + 1);
+      } catch { showAlert("danger", "Failed to save"); }
+   };
 
-  const showAlert = (type, msg) => { setAlertInfo({ show: true, type, msg }); setTimeout(() => setAlertInfo({ show: false }), 3000); };
+   // Marks and AI Logic
+   const fetchStudentsForExam = async (examId) => {
+      setSelection(prev => ({ ...prev, examId }));
+      setStudents([]); setMarksMap({}); setRemarksMap({});
 
-  // --- ATTENDANCE LOGIC ---
-  const fetchStudentsForClass = async (classId) => {
-    setSelection(prev => ({ ...prev, classId }));
-    setStudents([]); setAttendanceMap({});
-    if(!classId) return;
-    try {
-      const res = await api.get(`/api/classes/${classId}/students`);
-      setStudents(res.data);
-    } catch { showAlert("danger", "Failed to load students"); }
-  };
+      if (!examId) return;
+      const exam = data.exams.find(e => e._id === examId);
+      if (!exam?.classId?._id) return;
+      try {
+         const res = await api.get(`/api/users/students-by-class?classId=${exam.classId._id}`);
+         setStudents(res.data);
+      } catch { showAlert("danger", "Failed to load students"); }
+   };
 
-  const markAttendance = (studentId, status) => {
-    setAttendanceMap(prev => ({ ...prev, [studentId]: status }));
-  };
+   // AI Generator Function
+   const generateAiRemark = async (studentId, studentName) => {
+      const mark = marksMap[studentId];
+      if (!selection.examId || !mark) {
+         return showAlert("warning", "Enter marks first!");
+      }
+      const examObj = data.exams.find(e => e._id === selection.examId);
+      const subjectName = examObj ? examObj.subject : "Subject";
 
-  const submitAttendance = async () => {
-    if (!selection.classId || !selection.date) return showAlert("warning", "Select Class and Date");
-    try {
-      await Promise.all(Object.keys(attendanceMap).map(sid => 
-        api.post("/api/attendance", { studentId: sid, classId: selection.classId, date: selection.date, status: attendanceMap[sid] })
-      ));
-      showAlert("success", "Attendance Saved");
-      setStudents([]); setAttendanceMap({}); setSelection(prev => ({ ...prev, classId: "" }));
-      setRefreshKey(k => k + 1);
-    } catch { showAlert("danger", "Failed to save"); }
-  };
+      setAiLoading(prev => ({ ...prev, [studentId]: true }));
 
-  // --- MARKS & AI LOGIC ---
-  const fetchStudentsForExam = async (examId) => {
-    setSelection(prev => ({ ...prev, examId }));
-    setStudents([]); setMarksMap({}); setRemarksMap({});
-    
-    if(!examId) return;
-    const exam = data.exams.find(e => e._id === examId);
-    if (!exam?.classId?._id) return;
-    try {
-      const res = await api.get(`/api/users/students-by-class?classId=${exam.classId._id}`);
-      setStudents(res.data);
-    } catch { showAlert("danger", "Failed to load students"); }
-  };
+      try {
+         const res = await api.post("/api/ai/generate-remark", {
+            studentName,
+            subject: subjectName,
+            marks: mark,
+            totalMarks: 100
+         });
+         setRemarksMap(prev => ({ ...prev, [studentId]: res.data.remark }));
+      } catch (err) {
+         showAlert("danger", "AI Error. Check backend console.");
+      } finally {
+         setAiLoading(prev => ({ ...prev, [studentId]: false }));
+      }
+   };
 
-  // AI Generator Function
-  const generateAiRemark = async (studentId, studentName) => {
-    const mark = marksMap[studentId];
-    if (!selection.examId || !mark) {
-      return showAlert("warning", "Enter marks first!");
-    }
-    const examObj = data.exams.find(e => e._id === selection.examId);
-    const subjectName = examObj ? examObj.subject : "Subject";
+   const submitMarks = async () => {
+      try {
+         await Promise.all(students.map(s => {
+            const mark = marksMap[s._id];
+            if (!mark) return null;
+            return api.post("/api/results", {
+               examId: selection.examId,
+               studentId: s._id,
+               marksObtained: Number(mark)
+            });
+         }));
+         showAlert("success", "Marks Saved Successfully!");
+         setStudents([]); setMarksMap({}); setRemarksMap({}); setSelection(prev => ({ ...prev, examId: "" }));
+         setRefreshKey(k => k + 1);
+      } catch { showAlert("danger", "Failed to save"); }
+   };
 
-    setAiLoading(prev => ({ ...prev, [studentId]: true }));
+   if (loading) return <Loader text="Loading Teacher Portal..." />;
 
-    try {
-      const res = await api.post("/api/ai/generate-remark", {
-        studentName,
-        subject: subjectName,
-        marks: mark,
-        totalMarks: 100
-      });
-      setRemarksMap(prev => ({ ...prev, [studentId]: res.data.remark }));
-    } catch (err) {
-      showAlert("danger", "AI Error. Check backend console.");
-    } finally {
-      setAiLoading(prev => ({ ...prev, [studentId]: false }));
-    }
-  };
+   const menuItems = [
+      { id: "dashboard", label: "Overview", icon: FaChalkboardTeacher },
+      { id: "attendance", label: "Mark Attendance", icon: FaClipboardCheck },
+      { id: "marks", label: "Enter Marks (AI)", icon: FaMagic },
+      { id: "library", label: "Library Hub", icon: FaBookReader },
+      { id: "timetable", label: "My Timetable", icon: FaCalendarAlt },
+   ];
 
-  const submitMarks = async () => {
-    try {
-      await Promise.all(students.map(s => {
-        const mark = marksMap[s._id];
-        if (!mark) return null;
-        return api.post("/api/results", { 
-            examId: selection.examId, 
-            studentId: s._id, 
-            marksObtained: Number(mark)
-        });
-      }));
-      showAlert("success", "Marks Saved Successfully!");
-      setStudents([]); setMarksMap({}); setRemarksMap({}); setSelection(prev => ({ ...prev, examId: "" }));
-      setRefreshKey(k => k + 1);
-    } catch { showAlert("danger", "Failed to save"); }
-  };
+   return (
+      <div className="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden">
 
-  if (loading) return <Loader text="Loading..." />;
+         {/* Mobile Backdrop */}
+         {showSidebar && window.innerWidth < 1024 && (
+            <div
+               className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+               onClick={() => setShowSidebar(false)}
+            />
+         )}
 
-  return (
-    <div className="d-flex" style={styles.font}>
-      
-      {/* SIDEBAR */}
-      <div className={`d-none d-md-block p-3`} style={{ ...styles.sidebar, width: showSidebar ? "260px" : "0px", overflow: "hidden", transition: "width 0.3s" }}>
-        <div className="d-flex align-items-center mb-5 px-2">
-           <div className="bg-primary rounded p-2 me-2"><FaChalkboardTeacher size={20} color="white"/></div>
-           <h5 className="mb-0 fw-bold text-white">Teacher Portal</h5>
-        </div>
-        {[
-          { id: "dashboard", label: "Overview", icon: FaChalkboardTeacher },
-          { id: "attendance", label: "Mark Attendance", icon: FaClipboardCheck },
-          { id: "marks", label: "Enter Marks (AI)", icon: FaMagic },
-          { id: "library", label: "Library Hub", icon: FaBookReader },
-          { id: "timetable", label: "My Timetable", icon: FaCalendarAlt },
-        ].map((m) => (
-          <button key={m.id} style={styles.menuBtn(activeMenu === m.id)} onClick={() => { setActiveMenu(m.id); setStudents([]); setSelection({classId:"", date:"", examId:""}); }}>
-            <m.icon className="me-3" style={{opacity: 0.8}} /> {m.label}
-          </button>
-        ))}
-      </div>
-
-      {/* MAIN CONTENT */}
-      <div className="flex-grow-1 p-4 p-md-5" style={{ ...styles.main, height: "100vh", overflowY: "auto" }}>
-        
-        {/* HEADER */}
-        <div className="d-flex justify-content-between align-items-center mb-5">
-           <div className="d-flex align-items-center">
-              <FaBars className="d-md-none me-3 cursor-pointer text-muted" onClick={() => setShowSidebar(!showSidebar)} />
-              <div>
-                 <h2 className="fw-bold text-dark m-0">
-                    {activeMenu === 'marks' ? 'AI Results Entry' : activeMenu.charAt(0).toUpperCase() + activeMenu.slice(1)}
-                 </h2>
-                 <p className="text-muted small m-0">Welcome back, {user?.name}</p>
-              </div>
-           </div>
-           <div className="d-flex align-items-center gap-3">
-              <div className="bg-white p-2 rounded-circle shadow-sm border"><FaBell color="#64748b"/></div>
-              <button onClick={logout} className="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold border-2">
-                 Logout <FaSignOutAlt className="ms-1"/>
-              </button>
-           </div>
-        </div>
-
-        {alertInfo.show && <AlertMessage type={alertInfo.type} message={alertInfo.msg} onClose={() => setAlertInfo({show: false})} />}
-
-        {/* --- DASHBOARD VIEW --- */}
-        {activeMenu === "dashboard" && (
-          <div className="fade-in">
-             
-             {/* NOTICE BOARD WIDGET */}
-             <div className="row mb-4">
-               <div className="col-12">
-                 <div className="card border-0 shadow-sm p-3 bg-white" style={styles.card}>
-                   <h6 className="fw-bold mb-3 border-bottom pb-2">
-                      <FaBell className="text-warning me-2"/> Staff Notices
-                   </h6>
-                   {notices.length === 0 ? (
-                     <p className="text-muted small">No active notices.</p>
-                   ) : (
-                     notices.slice(0,3).map(n => (
-                       <div key={n._id} className="alert alert-info border-0 mb-2 py-2 d-flex align-items-center">
-                         <FaBullhorn className="me-2 text-info"/>
-                         <div>
-                            <strong>{n.title}</strong> <span className="text-muted small mx-2">|</span> <span className="small">{n.content}</span>
-                         </div>
-                       </div>
-                     ))
-                   )}
-                 </div>
+         {/* Sidebar */}
+         <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-100 transition-transform duration-300 ease-in-out transform lg:relative lg:translate-x-0 ${showSidebar ? 'translate-x-0' : '-translate-x-full'}`}>
+            <div className="flex items-center justify-between h-16 px-6 bg-slate-950/50 sidebar-header">
+               <div className="flex items-center space-x-3">
+                  <div className="bg-blue-600 p-1.5 rounded-lg">
+                     <FaChalkboardTeacher className="text-white" size={18} />
+                  </div>
+                  <span className="font-bold text-lg tracking-tight">Teacher Portal</span>
                </div>
-             </div>
+               <button className="lg:hidden text-slate-400 hover:text-white" onClick={() => setShowSidebar(false)}>
+                  <FaTimes size={20} />
+               </button>
+            </div>
 
-             {/* STATS */}
-             <div className="row g-4 mb-4">
-                <div className="col-md-6">
-                   <div className="p-4 h-100 bg-white" style={styles.card}>
-                      <div className="d-flex justify-content-between align-items-center">
-                         <div><div style={styles.labelText}>Assigned Classes</div><h1 className="fw-bold mt-2 text-dark display-5">{data.classes.length}</h1></div>
-                         <div className="bg-primary bg-opacity-10 text-primary p-4 rounded-circle"><FaUserGraduate size={32}/></div>
-                      </div>
-                   </div>
-                </div>
-                <div className="col-md-6">
-                   <div className="p-4 h-100 bg-white" style={styles.card}>
-                      <div className="d-flex justify-content-between align-items-center">
-                         <div><div style={styles.labelText}>Weekly Lectures</div><h1 className="fw-bold mt-2 text-dark display-5">{data.timetable.length}</h1></div>
-                         <div className="bg-success bg-opacity-10 text-success p-4 rounded-circle"><FaCalendarAlt size={32}/></div>
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </div>
-        )}
+            <div className="p-4 space-y-1 overflow-y-auto h-[calc(100vh-4rem)]">
+               {menuItems.map((item) => (
+                  <button
+                     key={item.id}
+                     onClick={() => {
+                        setActiveMenu(item.id);
+                        setStudents([]);
+                        setSelection({ classId: "", date: "", examId: "" });
+                        if (window.innerWidth < 1024) setShowSidebar(false);
+                     }}
+                     className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${activeMenu === item.id
+                        ? "bg-blue-600 text-white shadow-lg shadow-blue-900/50"
+                        : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                        }`}
+                  >
+                     <item.icon className={`text-lg ${activeMenu === item.id ? "text-white" : "text-slate-500 group-hover:text-white"}`} />
+                     <span>{item.label}</span>
+                  </button>
+               ))}
+            </div>
+         </div>
 
-        {/* --- ATTENDANCE VIEW --- */}
-        {activeMenu === "attendance" && (
-          <div style={styles.card} className="p-4 bg-white">
-             <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
-                <h5 className="fw-bold m-0 text-dark">Daily Attendance</h5>
-                <button className="btn btn-primary btn-sm fw-bold" onClick={submitAttendance} disabled={students.length===0}><FaCheckCircle className="me-2"/> Submit Data</button>
-             </div>
-             <div className="row g-3 mb-4">
-                <div className="col-md-4">
-                   <label style={styles.labelText}>Class</label>
-                   <select className="form-select bg-light border-0" value={selection.classId} onChange={(e) => fetchStudentsForClass(e.target.value)}>
-                      <option value="">Select...</option>
-                      {data.classes.map(c => <option key={c._id} value={c._id}>{c.name} {c.section ? `- ${c.section}` : ''}</option>)}
-                   </select>
-                </div>
-                <div className="col-md-4">
-                   <label style={styles.labelText}>Date</label>
-                   <input type="date" className="form-control bg-light border-0" value={selection.date} onChange={(e) => setSelection(prev => ({...prev, date: e.target.value}))} />
-                </div>
-             </div>
-             {students.length > 0 && (
-                <div className="table-responsive">
-                   <table className="table table-bordered align-middle mb-0">
-                      <thead style={styles.tableHeader}><tr><th>Roll</th><th>Student Name</th><th>Status</th></tr></thead>
-                      <tbody>
-                         {students.map(s => (
-                            <tr key={s._id}>
-                               <td className="fw-bold text-secondary">{s.rollNumber}</td>
-                               <td className="fw-bold text-dark">{s.name}</td>
-                               <td>
-                                  <div className="d-flex gap-2">
-                                     <button className={`btn btn-sm px-3 fw-bold ${attendanceMap[s._id] === 'Present' ? 'btn-success' : 'btn-light border'}`} onClick={() => markAttendance(s._id, 'Present')}>Present</button>
-                                     <button className={`btn btn-sm px-3 fw-bold ${attendanceMap[s._id] === 'Absent' ? 'btn-danger' : 'btn-light border'}`} onClick={() => markAttendance(s._id, 'Absent')}>Absent</button>
-                                  </div>
-                               </td>
-                            </tr>
-                         ))}
-                      </tbody>
-                   </table>
-                </div>
-             )}
-          </div>
-        )}
+         {/* Main Content */}
+         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
-        {/* --- MARKS VIEW --- */}
-        {activeMenu === "marks" && (
-          <div style={styles.card} className="p-4 bg-white">
-             <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
-                <div>
-                    <h5 className="fw-bold m-0 text-dark">Results Entry & AI Remarks</h5>
-                </div>
-                <button className="btn btn-success btn-sm fw-bold" onClick={submitMarks} disabled={students.length===0}><FaSave className="me-2"/> Save Marks</button>
-             </div>
-             <div className="mb-4" style={{maxWidth: '400px'}}>
-                <label style={styles.labelText}>Select Exam</label>
-                <select className="form-select bg-light border-0" value={selection.examId} onChange={(e) => fetchStudentsForExam(e.target.value)}>
-                   <option value="">Select...</option>
-                   {data.exams.map(e => <option key={e._id} value={e._id}>{e.name} ({e.subject})</option>)}
-                </select>
-             </div>
-             {students.length > 0 && (
-                <div className="table-responsive">
-                   <table className="table table-bordered align-middle">
-                      <thead style={styles.tableHeader}><tr><th>Student</th><th>Marks</th><th style={{width: '40%'}}>AI Remark</th></tr></thead>
-                      <tbody>
-                         {students.map(s => (
-                            <tr key={s._id}>
-                               <td className="fw-bold text-dark">{s.name}</td>
-                               <td style={{width: '150px'}}>
-                                  <input type="number" className="form-control" value={marksMap[s._id]||''} onChange={(e)=>setMarksMap({...marksMap, [s._id]: e.target.value})} />
-                               </td>
-                               <td>
-                                  <div className="input-group">
-                                    <input type="text" className="form-control" value={remarksMap[s._id] || ''} onChange={(e)=>setRemarksMap({...remarksMap, [s._id]: e.target.value})} />
-                                    <button className="btn btn-outline-primary" onClick={() => generateAiRemark(s._id, s.name)} disabled={aiLoading[s._id]}>
-                                        {aiLoading[s._id] ? <FaSpinner className="fa-spin"/> : <FaMagic />}
-                                    </button>
-                                  </div>
-                               </td>
-                            </tr>
-                         ))}
-                      </tbody>
-                   </table>
-                </div>
-             )}
-          </div>
-        )}
+            {/* Header */}
+            <header className="flex items-center justify-between h-16 px-6 bg-white border-b border-slate-200 shadow-sm z-10">
+               <div className="flex items-center">
+                  <button onClick={() => setShowSidebar(!showSidebar)} className="mr-4 p-2 rounded-full hover:bg-slate-100 lg:hidden">
+                     <FaBars className="text-slate-600" />
+                  </button>
+                  <h2 className="text-xl font-bold text-slate-800 uppercase tracking-wide">
+                     {activeMenu === 'marks' ? 'AI Results Entry' : activeMenu.charAt(0).toUpperCase() + activeMenu.slice(1)}
+                  </h2>
+               </div>
 
-        {/* --- LIBRARY VIEW --- */}
-        {activeMenu === "library" && (
-          <div className="fade-in">
-             <LibraryDashboard />
-          </div>
-        )}
+               <div className="flex items-center gap-4">
+                  <div className="hidden md:flex flex-col items-end">
+                     <span className="font-bold text-sm text-slate-800">{user?.name}</span>
+                     <span className="text-[10px] uppercase font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">Teacher</span>
+                  </div>
+                  <button
+                     onClick={logout}
+                     className="flex items-center px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                  >
+                     Logout <FaSignOutAlt className="ml-2" />
+                  </button>
+               </div>
+            </header>
 
-        {/* --- TIMETABLE VIEW --- */}
-        {activeMenu === "timetable" && (
-          <div style={styles.card} className="p-4 bg-white">
-             <h5 className="fw-bold mb-4 text-dark border-bottom pb-3">Weekly Schedule</h5>
-             <div className="table-responsive">
-                <table className="table table-hover align-middle mb-0">
-                   <thead style={styles.tableHeader}><tr><th className="ps-3">Day</th><th>Time</th><th>Class</th><th>Subject</th></tr></thead>
-                   <tbody>
-                      {data.timetable.map(t => (
-                        <tr key={t._id}>
-                           <td className="ps-3 fw-bold text-primary">{t.day}</td>
-                           <td><span className="badge bg-light text-dark border">{t.timeSlot}</span></td>
-                           <td>{t.classId?.name} {t.classId?.section ? `- ${t.classId.section}` : ''}</td>
-                           <td className="fw-bold text-dark">{t.subject}</td>
-                        </tr>
-                      ))}
-                   </tbody>
-                </table>
-             </div>
-          </div>
-        )}
+            <main className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth">
+               {alertInfo.show && (
+                  <div className="mb-6">
+                     <AlertMessage type={alertInfo.type} message={alertInfo.msg} onClose={() => setAlertInfo({ show: false })} />
+                  </div>
+               )}
 
+               {/* Dashboard View */}
+               {activeMenu === "dashboard" && (
+                  <div className="animate-fadeIn space-y-6">
+
+                     {/* Notice Board Widget */}
+                     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-6">
+                        <h6 className="font-bold text-blue-800 mb-4 flex items-center">
+                           <FaBell className="text-blue-600 mr-2" /> Staff Notices
+                        </h6>
+                        {notices.length === 0 ? (
+                           <p className="text-slate-500 text-sm italic">No active notices.</p>
+                        ) : (
+                           <div className="space-y-3">
+                              {notices.slice(0, 3).map(n => (
+                                 <div key={n._id} className="bg-white p-4 rounded-lg border border-blue-100 shadow-sm flex items-start">
+                                    <FaBullhorn className="mt-1 mr-3 text-blue-500 flex-shrink-0" />
+                                    <div>
+                                       <strong className="block text-slate-800 text-sm mb-1">{n.title}</strong>
+                                       <p className="text-slate-600 text-sm">{n.content}</p>
+                                    </div>
+                                 </div>
+                              ))}
+                           </div>
+                        )}
+                     </div>
+
+                     {/* Stats */}
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                           <div>
+                              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Assigned Classes</p>
+                              <h1 className="text-3xl font-bold text-slate-800">{data.classes.length}</h1>
+                           </div>
+                           <div className="bg-blue-50 p-4 rounded-full text-blue-600">
+                              <FaUserGraduate size={28} />
+                           </div>
+                        </div>
+                        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                           <div>
+                              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Weekly Lectures</p>
+                              <h1 className="text-3xl font-bold text-slate-800">{data.timetable.length}</h1>
+                           </div>
+                           <div className="bg-green-50 p-4 rounded-full text-green-600">
+                              <FaCalendarAlt size={28} />
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+               )}
+
+               {/* Attendance View */}
+               {activeMenu === "attendance" && (
+                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm animate-fadeIn">
+                     <div className="px-6 py-4 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50/50">
+                        <h5 className="font-bold text-slate-800">Attendance Register</h5>
+                        <button
+                           onClick={submitAttendance}
+                           disabled={students.length === 0}
+                           className={`flex items-center px-4 py-2 rounded-lg font-bold shadow-sm transition-colors ${students.length === 0 ? "bg-slate-200 text-slate-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 text-white"
+                              }`}
+                        >
+                           <FaCheckCircle className="mr-2" /> Submit Data
+                        </button>
+                     </div>
+
+                     <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 border-b border-slate-100">
+                        <div>
+                           <label className="block text-sm font-medium text-slate-700 mb-1">Select Class</label>
+                           <select
+                              className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                              value={selection.classId}
+                              onChange={(e) => fetchStudentsForClass(e.target.value)}
+                           >
+                              <option value="">Choose Class...</option>
+                              {data.classes.map(c => <option key={c._id} value={c._id}>{c.name} {c.section ? `- ${c.section}` : ''}</option>)}
+                           </select>
+                        </div>
+                        <div>
+                           <label className="block text-sm font-medium text-slate-700 mb-1">Select Date</label>
+                           <input
+                              type="date"
+                              className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              value={selection.date}
+                              onChange={(e) => setSelection(prev => ({ ...prev, date: e.target.value }))}
+                           />
+                        </div>
+                     </div>
+
+                     {students.length > 0 ? (
+                        <div className="overflow-x-auto">
+                           <table className="w-full text-left border-collapse">
+                              <thead>
+                                 <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500 font-semibold">
+                                    <th className="px-6 py-4">SRN</th>
+                                    <th className="px-6 py-4">Student Name</th>
+                                    <th className="px-6 py-4">Attendance Status</th>
+                                 </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-100">
+                                 {students.map(s => (
+                                    <tr key={s._id} className="hover:bg-slate-50">
+                                       <td className="px-6 py-4 font-mono text-slate-600 font-semibold">{s.admissionId || "N/A"}</td>
+                                       <td className="px-6 py-4 font-bold text-slate-800">{s.name}</td>
+                                       <td className="px-6 py-4">
+                                          <div className="flex gap-2">
+                                             <button
+                                                onClick={() => markAttendance(s._id, 'Present')}
+                                                className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${attendanceMap[s._id] === 'Present'
+                                                   ? "bg-green-600 text-white shadow-md ring-2 ring-green-600 ring-offset-2"
+                                                   : "bg-slate-100 text-slate-500 hover:bg-green-50 hover:text-green-600"
+                                                   }`}
+                                             >
+                                                Present
+                                             </button>
+                                             <button
+                                                onClick={() => markAttendance(s._id, 'Absent')}
+                                                className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${attendanceMap[s._id] === 'Absent'
+                                                   ? "bg-red-600 text-white shadow-md ring-2 ring-red-600 ring-offset-2"
+                                                   : "bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-600"
+                                                   }`}
+                                             >
+                                                Absent
+                                             </button>
+                                          </div>
+                                       </td>
+                                    </tr>
+                                 ))}
+                              </tbody>
+                           </table>
+                        </div>
+                     ) : (
+                        <div className="p-12 text-center">
+                           <p className="text-slate-400 italic">Select a class to load student list.</p>
+                        </div>
+                     )}
+                  </div>
+               )}
+
+               {/* Marks View */}
+               {activeMenu === "marks" && (
+                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm animate-fadeIn">
+                     <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                        <div>
+                           <h5 className="font-bold text-slate-800">Results Entry</h5>
+                           <p className="text-xs text-slate-500">Enter marks and use AI for remarks</p>
+                        </div>
+                        <button
+                           onClick={submitMarks}
+                           disabled={students.length === 0}
+                           className={`flex items-center px-4 py-2 rounded-lg font-bold shadow-sm transition-colors ${students.length === 0 ? "bg-slate-200 text-slate-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700 text-white"
+                              }`}
+                        >
+                           <FaSave className="mr-2" /> Save Marks
+                        </button>
+                     </div>
+
+                     <div className="p-6 border-b border-slate-100 max-w-md">
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Select Examination</label>
+                        <select
+                           className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                           value={selection.examId}
+                           onChange={(e) => fetchStudentsForExam(e.target.value)}
+                        >
+                           <option value="">Choose Exam...</option>
+                           {data.exams.map(e => <option key={e._id} value={e._id}>{e.name} ({e.subject})</option>)}
+                        </select>
+                     </div>
+
+                     {students.length > 0 ? (
+                        <div className="overflow-x-auto">
+                           <table className="w-full text-left border-collapse">
+                              <thead>
+                                 <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500 font-semibold">
+                                    <th className="px-6 py-4">Student Name</th>
+                                    <th className="px-6 py-4 w-40">Marks Obtained</th>
+                                    <th className="px-6 py-4 w-[40%]">AI Performance Remark</th>
+                                 </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-100">
+                                 {students.map(s => (
+                                    <tr key={s._id} className="hover:bg-slate-50">
+                                       <td className="px-6 py-4 font-bold text-slate-800">{s.name}</td>
+                                       <td className="px-6 py-4">
+                                          <input
+                                             type="number"
+                                             className="w-full px-3 py-2 border border-slate-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+                                             placeholder="0"
+                                             value={marksMap[s._id] || ''}
+                                             onChange={(e) => setMarksMap({ ...marksMap, [s._id]: e.target.value })}
+                                          />
+                                       </td>
+                                       <td className="px-6 py-4">
+                                          <div className="flex gap-2">
+                                             <input
+                                                type="text"
+                                                className="flex-1 px-3 py-2 border border-slate-300 rounded focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all"
+                                                placeholder="Remark..."
+                                                value={remarksMap[s._id] || ''}
+                                                onChange={(e) => setRemarksMap({ ...marksMap, [s._id]: e.target.value })}
+                                             />
+                                             <button
+                                                onClick={() => generateAiRemark(s._id, s.name)}
+                                                disabled={aiLoading[s._id]}
+                                                className="px-3 py-2 bg-purple-50 text-purple-600 hover:bg-purple-100 border border-purple-200 rounded transition-colors flex items-center justify-center min-w-[50px]"
+                                                title="Generate AI Remark"
+                                             >
+                                                {aiLoading[s._id] ? <FaSpinner className="animate-spin" /> : <FaMagic />}
+                                             </button>
+                                          </div>
+                                       </td>
+                                    </tr>
+                                 ))}
+                              </tbody>
+                           </table>
+                        </div>
+                     ) : (
+                        <div className="p-12 text-center">
+                           <p className="text-slate-400 italic">Select an exam to load student list.</p>
+                        </div>
+                     )}
+                  </div>
+               )}
+
+               {/* Library View */}
+               {activeMenu === "library" && (
+                  <div className="animate-fadeIn">
+                     <LibraryDashboard />
+                  </div>
+               )}
+
+               {/* Timetable View */}
+               {activeMenu === "timetable" && (
+                  <div className="animate-fadeIn">
+                     <TeacherTimetable />
+                  </div>
+               )}
+
+            </main>
+         </div>
       </div>
-    </div>
-  );
+   );
 }
 
 export default TeacherDashboard;

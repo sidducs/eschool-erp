@@ -18,6 +18,13 @@ const feeStructureSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+
+    breakdown: [
+      {
+        name: { type: String, required: true }, // e.g. Tuition Fee, Bus Fee
+        amount: { type: Number, required: true }
+      }
+    ],
   },
   { timestamps: true }
 );

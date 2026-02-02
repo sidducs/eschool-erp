@@ -24,6 +24,16 @@ const resultSchema = new mongoose.Schema(
       enum: ["Pass", "Fail"],
       required: true,
     },
+
+    grade: {
+      type: String, // A+, A, B, C, D, F
+      default: "",
+    },
+
+    remarks: {
+      type: String, // e.g. "Excellent work", "Needs improvement"
+      default: "",
+    },
   },
   { timestamps: true }
 );

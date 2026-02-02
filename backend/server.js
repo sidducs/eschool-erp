@@ -35,6 +35,7 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
+app.use("/uploads", express.static("uploads"));
 
 // Routes
 app.use("/api/auth", require("./routes/authRoutes"));
@@ -48,9 +49,10 @@ app.use("/api/results", require("./routes/resultRoutes"));
 app.use("/api/fees", feeRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/timetable", require("./routes/timetableRoutes"));
-app.use("/api/ai", aiRoutes); 
+app.use("/api/ai", aiRoutes);
 app.use("/api/notices", noticeRoutes);
 app.use("/api/library", require("./routes/libraryRoutes"));
+app.use("/api/settings", require("./routes/settingsRoutes"));
 app.get("/", (req, res) => {
   res.send("ESchool API is running...");
 });
