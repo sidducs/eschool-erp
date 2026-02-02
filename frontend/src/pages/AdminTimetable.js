@@ -271,9 +271,9 @@ function AdminTimetable() {
         </div>
 
         {/* RIGHT: Visual Schedule Grid */}
-        <div className="w-full lg:w-2/3">
+        <div className="w-full xl:w-2/3">
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex justify-between items-center mb-6">
               <h5 className="font-bold text-slate-700 flex items-center gap-2">
                 <FaClock className="text-blue-500" />
                 {viewMode === "class"
@@ -281,14 +281,6 @@ function AdminTimetable() {
                   : `${teachers.find(t => t._id === selectedId)?.name || 'Teacher'} Schedule`
                 }
               </h5>
-              <select
-                className="px-3 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500"
-                value={selectedDay}
-                onChange={(e) => setSelectedDay(e.target.value)}
-              >
-                <option value="All">All Days</option>
-                {days.map(d => <option key={d} value={d}>{d}</option>)}
-              </select>
             </div>
 
             {!selectedId ? (
@@ -297,70 +289,47 @@ function AdminTimetable() {
                 <p>Select a {viewMode === "class" ? "Class" : "Teacher"} to view their timetable.</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500 font-bold tracking-wider">
-                      <th className="px-6 py-4">Day</th>
-                      <th className="px-6 py-4">Time Slot</th>
-                      <th className="px-6 py-4">Subject</th>
-                      <th className="px-6 py-4">{viewMode === "class" ? "Teacher" : "Class"}</th>
-                      <th className="px-6 py-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {timetable.length === 0 ? (
-                      <tr>
-                        <td colSpan="5" className="px-6 py-8 text-center text-slate-400 italic">
-                          No entries found.
-                        </td>
-                      </tr>
-                    ) : (
-                      [...timetable]
-                        .filter(t => selectedDay === "All" || t.day === selectedDay)
-                        .sort((a, b) => {
-                          const dayOrder = days.indexOf(a.day) - days.indexOf(b.day);
-                          if (dayOrder !== 0) return dayOrder;
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                {days.map(day => {
+                  const daySlots = timetable
+                    .filter(t => t.day === day)
+                    .sort((a, b) => {
+                      const timeA = parseInt(a.timeSlot.split(":")[0]);
+                      const timeB = parseInt(b.timeSlot.split(":")[0]);
+                      return timeA - timeB;
+                    });
 
-                          // Heuristic for time sorting
-                          const parseTime = (t) => {
-                            if (!t) return 0;
-                            const part = t.split("-")[0].trim();
-                            let [h, m] = part.split(":").map(Number);
-                            if (h >= 1 && h <= 7) h += 12;
-                            return h * 60 + (m || 0);
-                          };
-                          return parseTime(a.timeSlot) - parseTime(b.timeSlot);
-                        }).map((slot) => (
-                          <tr key={slot._id} className={`hover:bg-blue-50 transition-colors group ${editingSlot?._id === slot._id ? "bg-amber-50" : ""}`}>
-                            <td className="px-6 py-4 font-bold text-slate-700 bg-slate-50/50 w-32 border-r border-slate-100">{slot.day}</td>
-                            <td className="px-6 py-4 text-blue-600 font-semibold text-sm whitespace-nowrap">
-                              <div className="flex items-center gap-2">
-                                <FaClock size={12} className="opacity-50" /> {slot.timeSlot}
+                  return (
+                    <div key={day} className="flex flex-col gap-2">
+                      <div className="bg-slate-100 p-2 rounded-lg text-center font-bold text-slate-600 uppercase text-xs tracking-wider border border-slate-200">
+                        {day.substring(0, 3)}
+                      </div>
+                      <div className="flex flex-col gap-2 min-h-[200px] bg-slate-50/50 rounded-lg p-2 border border-dashed border-slate-200">
+                        {daySlots.length === 0 ? (
+                          <div className="text-center text-xs text-slate-300 py-4 italic">Free</div>
+                        ) : (
+                          daySlots.map(slot => (
+                            <div key={slot._id} className={`p-3 rounded-lg border shadow-sm relative group bg-white hover:border-blue-300 transition-all ${editingSlot?._id === slot._id ? 'ring-2 ring-amber-400' : 'border-slate-100'}`}>
+                              {/* Actions Overlay */}
+                              <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                                <button onClick={() => initiateEdit(slot)} className="p-1 bg-amber-100 text-amber-600 rounded text-[10px] hover:bg-amber-200"><FaPen /></button>
+                                <button onClick={() => handleDelete(slot._id)} className="p-1 bg-red-100 text-red-600 rounded text-[10px] hover:bg-red-200"><FaTrash /></button>
                               </div>
-                            </td>
-                            <td className="px-6 py-4 font-bold text-slate-800 text-base">{slot.subject}</td>
-                            <td className="px-6 py-4 text-slate-600">
-                              <div className="flex items-center gap-2 bg-slate-100 w-fit px-3 py-1 rounded-full text-xs font-bold">
-                                {viewMode === "class" ? <FaUserTie size={12} className="text-slate-400" /> : <FaChalkboardTeacher size={12} className="text-slate-400" />}
-                                {viewMode === "class" ? (slot.teacher?.name || "Unassigned") : (`${slot.classId?.name || "?"} - ${slot.classId?.section || "?"}`)}
+
+                              <div className="text-xs font-bold text-blue-600 mb-1 flex items-center gap-1">
+                                <FaClock size={10} /> {slot.timeSlot}
                               </div>
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              <div className="flex justify-end gap-2 opacity-100">
-                                <button onClick={() => initiateEdit(slot)} className="p-2 bg-amber-100 text-amber-600 rounded-lg hover:bg-amber-200 transition-colors" title="Edit">
-                                  <FaPen size={12} />
-                                </button>
-                                <button onClick={() => handleDelete(slot._id)} className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors" title="Delete">
-                                  <FaTrash size={12} />
-                                </button>
+                              <div className="font-bold text-slate-800 text-sm leading-tight mb-1">{slot.subject}</div>
+                              <div className="text-[10px] text-slate-500 font-semibold bg-slate-100 inline-block px-1.5 py-0.5 rounded">
+                                {viewMode === "class" ? (slot.teacher?.name || "Unassigned") : (`${slot.classId?.name || "?"}-${slot.classId?.section || "?"}`)}
                               </div>
-                            </td>
-                          </tr>
-                        ))
-                    )}
-                  </tbody>
-                </table>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
