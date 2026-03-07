@@ -2,7 +2,7 @@ const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const connectDB = require("./config/db");
-const aiRoutes = require("./routes/aiRoutes"); // <--- Import
+const aiRoutes = require("./routes/aiRoutes");
 const feeRoutes = require("./routes/feeRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const noticeRoutes = require("./routes/noticeRoutes");
@@ -39,6 +39,7 @@ app.use("/uploads", express.static("uploads"));
 
 // Routes
 app.use("/api/auth", require("./routes/authRoutes"));
+app.use("/api/parent", require("./routes/parentRoutes"));
 app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/admin", require("./routes/adminRoutes"));
 app.use("/api/attendance", require("./routes/attendanceRoutes"));
@@ -49,10 +50,21 @@ app.use("/api/results", require("./routes/resultRoutes"));
 app.use("/api/fees", feeRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/timetable", require("./routes/timetableRoutes"));
-app.use("/api/ai", aiRoutes);
+app.use("/api/ai", require("./routes/aiRoutes"));
+app.use("/api/events", require("./routes/eventRoutes")); // Added Event Routes
 app.use("/api/notices", noticeRoutes);
 app.use("/api/library", require("./routes/libraryRoutes"));
 app.use("/api/settings", require("./routes/settingsRoutes"));
+app.use("/api/assignments", require("./routes/assignmentRoutes"));
+app.use("/api/quizzes", require("./routes/quizRoutes"));
+app.use("/api/leaves", require("./routes/leaveRoutes"));
+app.use("/api/chat", require("./routes/chatRoutes"));
+app.use("/api/submissions", require("./routes/submissionRoutes"));
+app.use("/api/common", require("./routes/commonRoutes"));
+app.use("/api/doubts", require("./routes/doubtRoutes"));
+app.use("/api/finance", require("./routes/financeRoutes"));
+app.use("/api/transport", require("./routes/transportRoutes"));
+app.use("/api/notifications", require("./routes/notificationRoutes"));
 app.get("/", (req, res) => {
   res.send("ESchool API is running...");
 });

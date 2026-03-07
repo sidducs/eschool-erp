@@ -4,7 +4,7 @@ const examSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: true, // Midterm, Final
+      required: true, 
     },
 
     classId: {

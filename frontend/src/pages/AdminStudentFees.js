@@ -28,12 +28,12 @@ function AdminStudentFees() {
   }, []);
 
   const updatePayment = async () => {
-    if (!selectedStudentId) return;
+    if (!selectedStudentId) return; // This is now Fee ID
 
     try {
       await api.put("/api/fees/pay", {
-        studentId: selectedStudentId,
-        paidAmount: paymentInputs[selectedStudentId],
+        feeId: selectedStudentId, // Sending Fee ID
+        paidAmount: paymentInputs[selectedStudentId], // Keyed by Fee ID
       });
 
       addToast("Payment updated successfully", "success");
@@ -54,10 +54,7 @@ function AdminStudentFees() {
       const blob = new Blob([res.data], { type: "application/pdf" });
       const url = window.URL.createObjectURL(blob);
 
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "fee-receipt.pdf";
-      link.click();
+      window.open(url, "_blank"); // Open in new tab for preview
     } catch {
       addToast("Failed to download receipt", "error");
     }
@@ -113,11 +110,11 @@ function AdminStudentFees() {
                       type="number"
                       className="form-control mb-2"
                       placeholder="Enter paid amount"
-                      value={paymentInputs[f.studentId._id] || ""}
+                      value={paymentInputs[f._id] || ""}
                       onChange={(e) =>
                         setPaymentInputs({
                           ...paymentInputs,
-                          [f.studentId._id]: e.target.value,
+                          [f._id]: e.target.value,
                         })
                       }
                     />
@@ -126,7 +123,7 @@ function AdminStudentFees() {
                       <button
                         className="btn btn-sm btn-success"
                         onClick={() => {
-                          setSelectedStudentId(f.studentId._id);
+                          setSelectedStudentId(f._id); // Storing Fee ID now
                           setShowPayConfirm(true);
                         }}
                       >
@@ -135,7 +132,7 @@ function AdminStudentFees() {
 
                       <button
                         className="btn btn-outline-secondary btn-sm"
-                        onClick={() => downloadReceipt(f.studentId._id)}
+                        onClick={() => downloadReceipt(f._id)} // Passing Fee ID
                       >
                         Receipt
                       </button>

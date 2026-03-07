@@ -1,33 +1,36 @@
 import { useState, useContext, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { AuthContext } from "../context/AuthContext";
 import Loader from "../components/Loader";
 
 // Sub-components
+import StudentAssignments from "../pages/StudentAssignments";
 import StudentAttendance from "../pages/StudentAttendance";
 import StudentTimetable from "../pages/StudentTimetable";
 import StudentResults from "../pages/StudentResults";
 import LibraryDashboard from "../pages/LibraryDashboard";
-
-
-// ... existing code ...
-
-
+import Profile from "../pages/Profile";
+import StudentQuizzes from "../pages/StudentQuizzes";
+import StudentLeaves from "../pages/StudentLeaves";
+import Chat from "../pages/Chat";
+import DoubtForum from "../pages/DoubtForum";
+import CertificateGenerator from "../pages/CertificateGenerator";
+import StudentTransport from "../pages/StudentTransport"; // Added
 
 import {
   FaBars, FaTachometerAlt, FaClipboardCheck, FaBook, FaCalendarAlt,
   FaFilePdf, FaUserGraduate, FaBullhorn,
-  FaBookReader, FaTimes, FaSignOutAlt, FaPrint
+  FaBookReader, FaTimes, FaSignOutAlt, FaPrint, FaClipboardList, FaLightbulb, FaBus, FaQuestionCircle, FaCertificate, FaCommentDots
 } from "react-icons/fa";
 
 function StudentDashboard() {
   const { user, logout } = useContext(AuthContext);
-  const navigate = useNavigate();
+  // const navigate = useNavigate(); // Unused
 
   const [activeMenu, setActiveMenu] = useState("dashboard");
   const [showSidebar, setShowSidebar] = useState(window.innerWidth > 1024);
-  const [profile, setProfile] = useState(null);
+  // const [profile, setProfile] = useState(null); // Unused
   const [loading, setLoading] = useState(true);
 
   const [stats, setStats] = useState({
@@ -38,6 +41,7 @@ function StudentDashboard() {
 
   const [notices, setNotices] = useState([]);
   const [fee, setFee] = useState(null);
+  const [events, setEvents] = useState([]); // Added events state
 
 
   useEffect(() => {
@@ -54,22 +58,21 @@ function StudentDashboard() {
     const fetchCoreData = async () => {
       try {
         setLoading(true);
-        // Fetch Profile & Notices first (Critical for UI)
-        const [profileRes, noticesRes] = await Promise.allSettled([
-          api.get("/api/auth/profile"),
+        const [noticesRes] = await Promise.allSettled([
+          // api.get("/api/auth/profile"), // Unused
           api.get("/api/notices")
         ]);
 
-        if (profileRes.status === "fulfilled") setProfile(profileRes.value.data);
         if (noticesRes.status === "fulfilled") setNotices(noticesRes.value.data || []);
 
         setLoading(false); // Show UI sooner
 
         // Fetch Stats & Fees in background
-        const [attendanceRes, resultsRes, feeRes] = await Promise.allSettled([
+        const [attendanceRes, resultsRes, feeRes, eventsRes] = await Promise.allSettled([
           api.get("/api/attendance/me"),
           api.get("/api/results/student"),
-          api.get("/api/fees/my-fee")
+          api.get("/api/fees/my-fee"),
+          api.get("/api/events")
         ]);
 
         const newStats = {
@@ -86,6 +89,8 @@ function StudentDashboard() {
           newStats.feeStatus = feeRes.value.data?.status || "Pending";
         }
 
+        if (eventsRes.status === "fulfilled") setEvents(eventsRes.value.data || []);
+
         setStats(newStats);
 
       } catch (err) {
@@ -96,18 +101,21 @@ function StudentDashboard() {
     fetchCoreData();
   }, []);
 
-
-  // Removed redundant useEffect for fees
-
-
-
   const menus = [
     { id: "dashboard", label: "Dashboard", icon: FaTachometerAlt },
     { id: "profile", label: "My Profile", icon: FaUserGraduate },
+    { id: "chat", label: "Messages", icon: FaCommentDots },
+    { id: "assignments", label: "Assignments", icon: FaClipboardList },
+    { id: "doubts", label: "Discussion Forum", icon: FaQuestionCircle },
+    { id: "certificates", label: "Certificates", icon: FaCertificate },
+    { id: "quizzes", label: "Online Quizzes", icon: FaLightbulb },
     { id: "attendance", label: "Attendance", icon: FaClipboardCheck },
     { id: "timetable", label: "Timetable", icon: FaCalendarAlt },
     { id: "results", label: "Results", icon: FaBook },
+    { id: "events", label: "Academic Calendar", icon: FaCalendarAlt }, // Added
+    { id: "leaves", label: "Leave Applications", icon: FaClipboardCheck },
     { id: "library", label: "Library Hub", icon: FaBookReader },
+    { id: "transport", label: "Transport Routes", icon: FaBus },
     { id: "fees", label: "Fee Receipt", icon: FaFilePdf },
   ];
 
@@ -143,10 +151,6 @@ function StudentDashboard() {
             <button
               key={item.id}
               onClick={() => {
-                if (item.id === 'profile') {
-                  navigate('/profile');
-                  return;
-                }
                 setActiveMenu(item.id);
                 if (window.innerWidth < 1024) setShowSidebar(false);
               }}
@@ -196,26 +200,39 @@ function StudentDashboard() {
             <div className="space-y-6 animate-fadeIn">
 
               {/* Notices (Priority) */}
-              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mb-6">
-                <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-                  <h6 className="font-bold text-slate-800 flex items-center">
-                    <FaBullhorn className="mr-2 text-orange-500" /> Recent School Notices
+              <div className="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-xl shadow-lg overflow-hidden mb-6 text-white relative">
+                {/* Decorative circle */}
+                <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white/5 rounded-full blur-3xl"></div>
+
+                <div className="px-6 py-5 border-b border-white/10 flex items-center justify-between">
+                  <h6 className="font-bold flex items-center gap-3 text-lg">
+                    <div className="bg-orange-500 p-2 rounded-lg text-white shadow-lg shadow-orange-500/30">
+                      <FaBullhorn size={16} />
+                    </div>
+                    Notice Board
                   </h6>
+                  <span className="text-xs font-medium bg-white/10 px-3 py-1 rounded-full border border-white/5">
+                    Latest Updates
+                  </span>
                 </div>
+
                 <div className="p-6 space-y-4">
                   {notices.length === 0 ? (
-                    <p className="text-slate-400 italic text-center text-sm">No notices posted recently.</p>
+                    <div className="text-center py-8 text-white/50">
+                      <p className="italic">No new notices at the moment.</p>
+                    </div>
                   ) : (
                     notices.slice(0, 3).map((n, i) => (
-                      <div key={i} className="flex gap-4 p-4 bg-slate-50 rounded-lg border border-slate-100">
-                        <div className="flex-shrink-0 mt-1">
-                          <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                      <div key={i} className="group relative pl-4 border-l-2 border-white/20 hover:border-orange-500 transition-colors">
+                        <div className="mb-1 flex items-center gap-2">
+                          <span className="text-[10px] uppercase tracking-wider font-bold text-orange-400">
+                            {new Date(n.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                          </span>
+                          <h5 className="font-bold text-white text-sm truncate">{n.title}</h5>
                         </div>
-                        <div>
-                          <h5 className="font-bold text-slate-800 text-sm mb-1">{n.title}</h5>
-                          <p className="text-slate-600 text-sm leading-relaxed">{n.content}</p>
-                          <p className="text-[10px] text-slate-400 mt-2">{new Date(n.createdAt).toLocaleDateString()}</p>
-                        </div>
+                        <p className="text-white/70 text-xs line-clamp-2 leading-relaxed group-hover:text-white/90 transition-colors">
+                          {n.content}
+                        </p>
                       </div>
                     ))
                   )}
@@ -252,55 +269,70 @@ function StudentDashboard() {
             </div>
           )}
 
-          {activeMenu === "profile" && (
-            <div className="max-w-4xl mx-auto animate-fadeIn">
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <div className="h-32 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
-                <div className="px-6 pb-8 relative">
-                  <div className="flex flex-col md:flex-row items-end -mt-12 mb-6">
-                    <div className="w-24 h-24 bg-white p-1 rounded-full shadow-lg">
-                      <div className="w-full h-full bg-slate-200 rounded-full flex items-center justify-center text-slate-500 text-3xl font-bold border-2 border-white uppercase">
-                        {user?.name?.charAt(0) || "S"}
-                      </div>
-                    </div>
-                    <div className="mt-4 md:mt-0 md:ml-4 flex-1 text-center md:text-left">
-                      <h2 className="text-2xl font-bold text-slate-800">{user?.name}</h2>
-                      <p className="text-slate-500 text-sm font-medium">Student • {profile?.admissionId || "SRN Loading..."}</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Personal Details */}
-                    <div className="bg-slate-50 p-6 rounded-xl border border-slate-100">
-                      <h6 className="uppercase text-xs font-bold text-slate-400 tracking-wider mb-4 border-b border-slate-200 pb-2">Personal Information</h6>
-                      <div className="space-y-4">
-                        <div className="flex justify-between"><span className="text-xs text-slate-500 uppercase font-semibold">Email</span> <span className="text-slate-800 font-medium text-sm">{user?.email}</span></div>
-                        <div className="flex justify-between"><span className="text-xs text-slate-500 uppercase font-semibold">DOB</span> <span className="text-slate-800 font-medium text-sm">{profile?.dob ? new Date(profile.dob).toLocaleDateString() : "Not Provided"}</span></div>
-                        <div className="flex justify-between"><span className="text-xs text-slate-500 uppercase font-semibold">Blood Group</span> <span className="text-slate-800 font-medium text-sm">{profile?.bloodGroup || "N/A"}</span></div>
-                        <div className="flex justify-between"><span className="text-xs text-slate-500 uppercase font-semibold">Admission ID</span> <span className="text-slate-800 font-medium text-sm">{profile?.admissionId || "-"}</span></div>
-                      </div>
-                    </div>
-
-                    {/* Family & Contact */}
-                    <div className="bg-slate-50 p-6 rounded-xl border border-slate-100">
-                      <h6 className="uppercase text-xs font-bold text-slate-400 tracking-wider mb-4 border-b border-slate-200 pb-2">Family & Contact</h6>
-                      <div className="space-y-4">
-                        <div className="flex justify-between"><span className="text-xs text-slate-500 uppercase font-semibold">Father</span> <span className="text-slate-800 font-medium text-sm">{profile?.fatherName || "-"}</span></div>
-                        <div className="flex justify-between"><span className="text-xs text-slate-500 uppercase font-semibold">Mother</span> <span className="text-slate-800 font-medium text-sm">{profile?.motherName || "-"}</span></div>
-                        <div className="flex justify-between"><span className="text-xs text-slate-500 uppercase font-semibold">Phone</span> <span className="text-slate-800 font-medium text-sm">{profile?.phoneNumber || "-"}</span></div>
-                        <div><span className="block text-xs text-slate-500 uppercase font-semibold mb-1">Address</span> <span className="text-slate-800 font-medium text-sm block leading-snug">{profile?.address || "-"}</span></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          {activeMenu === "profile" && <Profile />}
+          {activeMenu === "assignments" && <StudentAssignments />}
+          {activeMenu === "doubts" && <DoubtForum />}
+          {activeMenu === "certificates" && <CertificateGenerator />}
+          {activeMenu === "quizzes" && <StudentQuizzes />}
 
           {activeMenu === "attendance" && <StudentAttendance />}
           {activeMenu === "timetable" && <StudentTimetable />}
           {activeMenu === "results" && <StudentResults />}
+          {activeMenu === "leaves" && <StudentLeaves />}
+          {activeMenu === "chat" && <Chat />}
           {activeMenu === "library" && <LibraryDashboard />}
+          {activeMenu === "transport" && <StudentTransport />}
+
+          {/* EVENTS CALENDAR */}
+          {activeMenu === "events" && (
+            <div className="max-w-4xl mx-auto space-y-6 animate-fadeIn">
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-8 rounded-2xl text-white shadow-lg mb-6">
+                <h2 className="text-3xl font-bold flex items-center gap-3">
+                  <FaCalendarAlt /> Academic Calendar
+                </h2>
+                <p className="text-blue-100 mt-2">Stay updated with upcoming holidays, exams, and school events.</p>
+              </div>
+
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden p-6">
+                <h5 className="font-bold text-lg text-slate-800 mb-6">Upcoming Events</h5>
+                {(events.length === 0) ? (
+                  <div className="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                    <FaCalendarAlt className="mx-auto text-slate-300 text-4xl mb-3" />
+                    <p className="text-slate-500 font-medium">No upcoming events scheduled.</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-4">
+                    {events.map((ev, i) => (
+                      <div key={i} className="flex gap-6 p-4 bg-white rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow hover:border-blue-200">
+                        <div className={`flex-shrink-0 w-20 h-20 rounded-xl flex flex-col justify-center items-center text-white font-bold shadow-sm ${ev.type === 'holiday' ? 'bg-red-500' :
+                          ev.type === 'exam' ? 'bg-purple-500' : 'bg-blue-500'
+                          }`}>
+                          <span className="text-xs uppercase tracking-wider">{new Date(ev.startDate).toLocaleString('default', { month: 'short' })}</span>
+                          <span className="text-3xl leading-none">{new Date(ev.startDate).getDate()}</span>
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h6 className="font-bold text-slate-800 text-lg">{ev.title}</h6>
+                              <span className={`inline-block px-2 py-0.5 rounded text-xs font-bold uppercase mt-1 ${ev.type === 'holiday' ? 'bg-red-50 text-red-600' :
+                                ev.type === 'exam' ? 'bg-purple-50 text-purple-600' : 'bg-blue-50 text-blue-600'
+                                }`}>
+                                {ev.type}
+                              </span>
+                            </div>
+                            <span className="text-slate-400 text-xs font-medium bg-slate-50 px-2 py-1 rounded">
+                              {new Date(ev.startDate).toLocaleDateString()} - {new Date(ev.endDate).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <p className="text-slate-600 text-sm mt-2 leading-relaxed">{ev.description || "No additional details provided."}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {activeMenu === "fees" && (
             <div className="max-w-3xl mx-auto bg-white rounded-xl border border-slate-200 shadow-sm animate-fadeIn overflow-hidden">
@@ -335,6 +367,31 @@ function StudentDashboard() {
                       </div>
                     </div>
 
+                    {fee.breakdown && fee.breakdown.length > 0 && (
+                      <div className="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden">
+                        <table className="w-full text-left text-sm">
+                          <thead className="bg-slate-100 border-b border-slate-200 text-slate-500 uppercase font-bold text-xs">
+                            <tr>
+                              <th className="px-6 py-3">Fee Component</th>
+                              <th className="px-6 py-3 text-right">Amount</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {fee.breakdown.map((item, index) => (
+                              <tr key={index} className="hover:bg-slate-100 transition-colors">
+                                <td className="px-6 py-3 font-medium text-slate-700">{item.name || item.title}</td>
+                                <td className="px-6 py-3 text-right font-mono text-slate-600">₹{item.amount.toLocaleString()}</td>
+                              </tr>
+                            ))}
+                            <tr className="bg-slate-100 font-bold border-t border-slate-200">
+                              <td className="px-6 py-3 text-slate-800">Total</td>
+                              <td className="px-6 py-3 text-right text-slate-900">₹{fee.totalFee.toLocaleString()}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+
                     {fee.status !== "PAID" && (
                       <div className="text-center">
                         <p className="text-sm text-slate-500">Please contact the administration office to clear your pending dues.</p>
@@ -354,8 +411,8 @@ function StudentDashboard() {
           )}
 
         </main>
-      </div >
-    </div >
+      </div>
+    </div>
   );
 }
 

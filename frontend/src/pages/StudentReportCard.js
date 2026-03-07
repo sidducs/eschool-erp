@@ -1,9 +1,28 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { FaPrint, FaSchool, FaMedal } from 'react-icons/fa';
+import api from "../services/api";
 
 const StudentReportCard = ({ student, results, onBack }) => {
     const componentRef = useRef(null);
+    const [schoolSettings, setSchoolSettings] = useState({
+        schoolName: "ESchool Academy",
+        address: "123 Education Lane, Knowledge City",
+        phone: "",
+        website: ""
+    });
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const { data } = await api.get('/api/settings');
+                if (data) setSchoolSettings(data);
+            } catch (err) {
+                console.warn("Failed to fetch school settings", err);
+            }
+        };
+        fetchSettings();
+    }, []);
 
     const handlePrint = useReactToPrint({
         content: () => componentRef.current,
@@ -51,7 +70,7 @@ const StudentReportCard = ({ student, results, onBack }) => {
                     </button>
                     <button
                         onClick={handlePrint}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold shadow-lg shadow-blue-500/20 flex items-center gap-2 transition-all"
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold shadow-lg shadow-blue-500/20 flex items-center gap-2 transition-transform active:scale-95"
                     >
                         <FaPrint /> Print Report Card
                     </button>
@@ -65,10 +84,10 @@ const StudentReportCard = ({ student, results, onBack }) => {
                         <div className="border-b-4 border-double border-slate-900 pb-6 mb-8 text-center">
                             <div className="flex items-center justify-center gap-4 mb-2">
                                 <FaSchool className="text-4xl text-slate-900" />
-                                <h1 className="text-3xl font-serif font-bold uppercase tracking-widest text-slate-900">ESchool Academy</h1>
+                                <h1 className="text-3xl font-serif font-bold uppercase tracking-widest text-slate-900">{schoolSettings.schoolName}</h1>
                             </div>
                             <p className="text-slate-500 text-sm font-serif italic">Excellence in Education • Est. 2024</p>
-                            <p className="text-slate-500 text-sm">123 Education Lane, Knowledge City</p>
+                            <p className="text-slate-500 text-sm">{schoolSettings.address}</p>
                         </div>
 
                         {/* Report Title */}

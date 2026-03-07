@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
 import { FaBook, FaClipboardCheck, FaSave, FaCalculator } from "react-icons/fa";
+import ConfirmationModal from "../components/ConfirmationModal";
 
 function TeacherEnterMarks() {
   const [exams, setExams] = useState([]);
@@ -8,6 +9,7 @@ function TeacherEnterMarks() {
   const [examId, setExamId] = useState("");
   const [marks, setMarks] = useState({});
   const [loading, setLoading] = useState(false);
+  const [modal, setModal] = useState({ isOpen: false, title: "", message: "", onConfirm: null, isDanger: false });
 
   useEffect(() => {
     const fetchExams = async () => {
@@ -58,11 +60,20 @@ function TeacherEnterMarks() {
     });
   };
 
+  const confirmSubmit = () => {
+    setModal({
+      isOpen: true,
+      title: "Save Marks",
+      message: "Are you sure you want to save these marks? This will update the student results and cannot be easily undone.",
+      confirmText: "Save Results",
+      isDanger: false,
+      onConfirm: submitMarks
+    });
+  };
+
   const submitMarks = async () => {
     const selectedExam = exams.find(e => e._id === examId);
     const maxMarks = selectedExam ? selectedExam.totalMarks : 100;
-
-    if (!window.confirm("Are you sure you want to save these marks? This will update the student results.")) return;
 
     setLoading(true);
     try {
@@ -115,6 +126,16 @@ function TeacherEnterMarks() {
 
   return (
     <div className="animate-fadeIn max-w-5xl mx-auto">
+      <ConfirmationModal
+        isOpen={modal.isOpen}
+        onClose={() => setModal({ ...modal, isOpen: false })}
+        onConfirm={modal.onConfirm}
+        title={modal.title}
+        message={modal.message}
+        confirmText={modal.confirmText}
+        isDanger={modal.isDanger}
+      />
+
       <div className="flex items-center gap-3 mb-8">
         <div className="bg-slate-900 p-3 rounded-2xl text-white shadow-lg">
           <FaClipboardCheck size={24} />
@@ -200,7 +221,7 @@ function TeacherEnterMarks() {
 
           <div className="p-6 bg-slate-50 border-t border-slate-200 flex justify-end">
             <button
-              onClick={submitMarks}
+              onClick={confirmSubmit}
               disabled={loading}
               className="bg-slate-900 hover:bg-black text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all active:scale-95 flex items-center gap-2"
             >

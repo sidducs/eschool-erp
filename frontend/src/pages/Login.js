@@ -32,7 +32,9 @@ function Login() {
       addToast("Login successful", "success");
 
       if (res.data.role === "admin") navigate("/admin");
+      else if (res.data.role === "accountant") navigate("/accountant");
       else if (res.data.role === "teacher") navigate("/teacher");
+      else if (res.data.role === "parent") navigate("/parent/dashboard");
       else navigate("/student");
 
     } catch (err) {
@@ -120,10 +122,14 @@ function Login() {
             </button>
           </form>
 
-          <div className="text-center mt-8 pt-6 border-t border-slate-100">
+          <div className="text-center mt-8 pt-6 border-t border-slate-100 flex flex-col gap-2">
             <p className="text-slate-500 text-sm">
               New to ESchool?
               <Link to="/register" className="text-blue-600 hover:text-blue-700 font-bold ml-1 transition-colors">Create Account</Link>
+            </p>
+            <p className="text-slate-500 text-sm">
+              Are you a Parent?
+              <Link to="/parent/register" className="text-indigo-600 hover:text-indigo-700 font-bold ml-1 transition-colors">Parent Portal</Link>
             </p>
           </div>
         </div>

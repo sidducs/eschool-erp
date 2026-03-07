@@ -63,9 +63,30 @@ const getStudentsByClass = async (req, res) => {
     const students = await User.find({
       classId: req.params.classId,
       role: "student",
-    }).select("name rollNumber");
+    }).select("name rollNumber admissionId");
 
     res.json(students);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Bulk Assign students to class (Admin)
+const assignStudentsToClass = async (req, res) => {
+  try {
+    const { studentIds, classId } = req.body; // Expecting array of IDs
+
+    if (!Array.isArray(studentIds) || studentIds.length === 0) {
+      return res.status(400).json({ message: "No students selected" });
+    }
+
+    // Update all students
+    await User.updateMany(
+      { _id: { $in: studentIds }, role: "student" },
+      { $set: { classId: classId } }
+    );
+
+    res.json({ message: `Successfully assigned ${studentIds.length} students to class` });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -75,5 +96,7 @@ module.exports = {
   createClass,
   assignStudentToClass,
   getAllClasses,
+  getAllClasses,
   getStudentsByClass,
+  assignStudentsToClass,
 };

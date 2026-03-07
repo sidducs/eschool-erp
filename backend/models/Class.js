@@ -3,15 +3,15 @@ const mongoose = require("mongoose");
 const classSchema = new mongoose.Schema(
   {
     name: {
-      type: String, // e.g. "10"
+      type: String, 
       required: true,
     },
     section: {
-      type: String, // e.g. "A"
+      type: String, 
       required: true,
     },
     academicYear: {
-      type: String, // e.g. "2025-26"
+      type: String, 
       required: true,
     },
   },

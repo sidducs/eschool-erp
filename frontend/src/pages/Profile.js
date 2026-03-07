@@ -3,15 +3,16 @@ import { AuthContext } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import api from "../services/api";
 import Loader from "../components/Loader";
-import { FaUser, FaLock, FaSave, FaCamera, FaEnvelope, FaPhone, FaMapMarkerAlt } from "react-icons/fa";
+import { FaUser, FaLock, FaSave, FaCamera, FaEnvelope, FaPhone, FaMapMarkerAlt, FaEdit, FaTimes, FaIdCard, FaGraduationCap } from "react-icons/fa";
 
 function Profile() {
-    const { user, login } = useContext(AuthContext);
+    const { user } = useContext(AuthContext);
     const { addToast } = useToast();
 
     const [activeTab, setActiveTab] = useState("details"); // details | security
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
 
     const [profileData, setProfileData] = useState({});
     const [passwordData, setPasswordData] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
@@ -21,19 +22,18 @@ function Profile() {
     const fileInputRef = useRef(null);
 
     useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const res = await api.get("/api/auth/profile");
+                setProfileData(res.data);
+            } catch (err) {
+                addToast("Failed to load profile", "error");
+            } finally {
+                setLoading(false);
+            }
+        };
         fetchProfile();
-    }, []);
-
-    const fetchProfile = async () => {
-        try {
-            const res = await api.get("/api/auth/profile");
-            setProfileData(res.data);
-        } catch (err) {
-            addToast("Failed to load profile", "error");
-        } finally {
-            setLoading(false);
-        }
-    };
+    }, [addToast]);
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
@@ -49,22 +49,21 @@ function Profile() {
         try {
             const formData = new FormData();
             Object.keys(profileData).forEach(key => {
-                if (profileData[key] !== null && profileData[key] !== undefined && key !== "profilePicture" && key !== "documents") {
+                if (profileData[key] !== null && profileData[key] !== undefined && key !== "profilePicture" && key !== "documents" && key !== "classId") {
                     formData.append(key, profileData[key]);
                 }
             });
 
-            // Handle documents separation if needed, but for now just basic fields
             if (selectedFile) {
                 formData.append("profilePicture", selectedFile);
             }
 
-            const res = await api.put("/api/auth/profile", formData, {
-                headers: { "Content-Type": "multipart/form-data" }
-            });
+            const res = await api.put("/api/auth/profile", formData);
 
-            setProfileData(res.data.user || profileData);
-            login(res.data.user.token, res.data.user); // Refresh context user if needed, though backend currently returns user obj
+            setProfileData(prev => ({ ...prev, ...res.data.user }));
+            setPreviewImage(null);
+            setSelectedFile(null);
+            setIsEditing(false); // Exit edit mode
             addToast("Profile updated successfully", "success");
 
         } catch (err) {
@@ -102,7 +101,7 @@ function Profile() {
             <div className="max-w-4xl mx-auto">
 
                 {/* Profile Header */}
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-8">
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
                     <div className="h-32 bg-gradient-to-r from-blue-600 to-indigo-700"></div>
                     <div className="px-8 pb-8 relative">
                         <div className="flex flex-col sm:flex-row items-end -mt-12 mb-6">
@@ -110,7 +109,12 @@ function Profile() {
                                 <div className="w-24 h-24 bg-white p-1 rounded-full shadow-lg overflow-hidden">
                                     {previewImage || profileData.profilePicture ? (
                                         <img
-                                            src={previewImage || `http://localhost:5000${profileData.profilePicture}`}
+                                            src={
+                                                previewImage ||
+                                                (profileData.profilePicture?.startsWith("http")
+                                                    ? profileData.profilePicture
+                                                    : `http://localhost:5000${profileData.profilePicture}`)
+                                            }
                                             alt="Profile"
                                             className="w-full h-full object-cover rounded-full border-2 border-white"
                                             onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/150?text=USER"; }}
@@ -121,31 +125,59 @@ function Profile() {
                                         </div>
                                     )}
                                 </div>
-                                <input
-                                    type="file"
-                                    ref={fileInputRef}
-                                    className="hidden"
-                                    accept="image/*"
-                                    onChange={handleFileChange}
-                                />
-                                <button
-                                    onClick={() => fileInputRef.current.click()}
-                                    className="absolute bottom-0 right-0 bg-blue-600 text-white p-2 rounded-full shadow-md hover:bg-blue-700 transition-colors cursor-pointer"
-                                    title="Change Profile Photo"
-                                >
-                                    <FaCamera size={14} />
-                                </button>
+                                {isEditing && (
+                                    <>
+                                        <input
+                                            type="file"
+                                            ref={fileInputRef}
+                                            className="hidden"
+                                            accept="image/*"
+                                            onChange={handleFileChange}
+                                        />
+                                        <button
+                                            onClick={() => fileInputRef.current.click()}
+                                            className="absolute bottom-0 right-0 bg-blue-600 text-white p-2 rounded-full shadow-md hover:bg-blue-700 transition-colors cursor-pointer"
+                                            title="Change Profile Photo"
+                                        >
+                                            <FaCamera size={14} />
+                                        </button>
+                                    </>
+                                )}
                             </div>
                             <div className="mt-4 sm:mt-0 sm:ml-4 flex-1 text-center sm:text-left">
-                                <h1 className="text-2xl font-bold text-slate-800">{user?.name}</h1>
+                                <h1 className="text-2xl font-bold text-slate-800">{profileData.name || user?.name}</h1>
                                 <div className="flex items-center justify-center sm:justify-start gap-2 mt-1">
                                     <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-wide border border-slate-200">
                                         {user?.role}
                                     </span>
-                                    <span className="text-slate-400 text-sm">•</span>
-                                    <span className="text-slate-500 text-sm">{user?.email}</span>
+                                    {profileData.admissionId && (
+                                        <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 text-xs font-bold border border-blue-100">
+                                            SRN: {profileData.admissionId}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
+
+                            {/* Edit/Cancel Toggle */}
+                            {activeTab === "details" && (
+                                <div className="mt-4 sm:mt-0">
+                                    {!isEditing ? (
+                                        <button
+                                            onClick={() => setIsEditing(true)}
+                                            className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-bold transition-colors"
+                                        >
+                                            <FaEdit /> Edit Details
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={() => { setIsEditing(false); setPreviewImage(null); setSelectedFile(null); }}
+                                            className="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-sm font-bold transition-colors"
+                                        >
+                                            <FaTimes /> Cancel
+                                        </button>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         {/* Tabs */}
@@ -172,97 +204,212 @@ function Profile() {
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 animate-fadeIn">
 
                     {activeTab === "details" && (
-                        <form onSubmit={handleProfileUpdate} className="space-y-6">
-                            <h3 className="text-lg font-bold text-slate-800 mb-4">Edit Personal Information</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
-                                    <input
-                                        className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 transition-all bg-slate-50"
-                                        value={profileData.name || ""}
-                                        onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Email <span className="text-xs text-slate-400">(Read Only)</span></label>
-                                    <div className="relative">
-                                        <FaEnvelope className="absolute left-3 top-3 text-slate-400" />
-                                        <input
-                                            className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 bg-slate-100 text-slate-500 cursor-not-allowed"
-                                            value={profileData.email || ""}
-                                            readOnly
-                                        />
-                                    </div>
-                                </div>
+                        <>
+                            {!isEditing ? (
+                                /* --- READ ONLY VIEW --- */
+                                <div className="space-y-8 text-sm">
 
-                                {/* Additional Fields for Students/Teachers */}
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Phone Number</label>
-                                    <div className="relative">
-                                        <FaPhone className="absolute left-3 top-3 text-slate-400" />
-                                        <input
-                                            className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 transition-all"
-                                            value={profileData.phoneNumber || ""}
-                                            onChange={(e) => setProfileData({ ...profileData, phoneNumber: e.target.value })}
-                                            placeholder="+91..."
-                                        />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Date of Birth</label>
-                                    <input
-                                        type="date"
-                                        className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 transition-all"
-                                        value={profileData.dob ? new Date(profileData.dob).toISOString().split('T')[0] : ""}
-                                        onChange={(e) => setProfileData({ ...profileData, dob: e.target.value })}
-                                    />
-                                </div>
+                                    {/* Academic Details - Only for students - MOVED TO TOP */}
+                                    {user?.role === 'student' && (
+                                        <div className="mb-8">
+                                            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">Academic Details</h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-12">
+                                                <div>
+                                                    <p className="text-slate-500 text-xs mb-1">SRN / Admission ID</p>
+                                                    <p className="font-semibold text-slate-800 text-base">{profileData.admissionId || "N/A"}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-slate-500 text-xs mb-1">Class & Section</p>
+                                                    <p className="font-semibold text-slate-800 text-base">
+                                                        {profileData.classId ? `${profileData.classId.name} - ${profileData.classId.section}` : "Not Assigned"}
+                                                    </p>
+                                                </div>
+                                                {/* Roll Number Removed as per request */}
+                                            </div>
+                                        </div>
+                                    )}
 
-                                <div className="md:col-span-2">
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Residential Address</label>
-                                    <div className="relative">
-                                        <FaMapMarkerAlt className="absolute left-3 top-3 text-slate-400" />
-                                        <textarea
-                                            className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 transition-all"
-                                            value={profileData.address || ""}
-                                            onChange={(e) => setProfileData({ ...profileData, address: e.target.value })}
-                                            rows="3"
-                                        />
+                                    {/* Personal Details Section */}
+                                    <div>
+                                        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">Personal Details</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-y-1 gap-x-12"> {/* Reduced gap-y for tighter spacing if needed */}
+                                            <div className="mb-5">
+                                                <p className="text-slate-500 text-xs mb-1">Full Name</p>
+                                                <p className="font-semibold text-slate-800 text-base">{profileData.name}</p>
+                                            </div>
+                                            <div className="mb-5">
+                                                <p className="text-slate-500 text-xs mb-1">Email ID</p>
+                                                <p className="font-semibold text-slate-800 text-base">{profileData.email}</p>
+                                            </div>
+                                            <div className="mb-5">
+                                                <p className="text-slate-500 text-xs mb-1">Contact No</p>
+                                                <p className="font-semibold text-slate-800 text-base">{profileData.phoneNumber || "N/A"}</p>
+                                            </div>
+                                            <div className="mb-5">
+                                                <p className="text-slate-500 text-xs mb-1">Date of Birth</p>
+                                                <p className="font-semibold text-slate-800 text-base">
+                                                    {profileData.dob ? new Date(profileData.dob).toLocaleDateString() : "N/A"}
+                                                </p>
+                                            </div>
+                                            <div className="mb-5">
+                                                <p className="text-slate-500 text-xs mb-1">Blood Group</p>
+                                                <p className="font-semibold text-slate-800 text-base">{profileData.bloodGroup || "N/A"}</p>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
 
-                                {user?.role === 'student' && (
-                                    <>
+                                    {/* Parent Details - Only for students */}
+                                    {user?.role === 'student' && (
                                         <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Father's Name</label>
+                                            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">Parent Details</h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-12">
+                                                <div>
+                                                    <p className="text-slate-500 text-xs mb-1">Father's Name</p>
+                                                    <p className="font-semibold text-slate-800 text-base">{profileData.fatherName || "N/A"}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-slate-500 text-xs mb-1">Mother's Name</p>
+                                                    <p className="font-semibold text-slate-800 text-base">{profileData.motherName || "N/A"}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Address */}
+                                    <div>
+                                        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">Address Information</h3>
+                                        <div>
+                                            <p className="text-slate-500 text-xs mb-1">Residential Address</p>
+                                            <p className="font-semibold text-slate-800 text-base leading-relaxed">
+                                                {profileData.address || "No address provided"}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            ) : (
+                                /* --- EDIT FORM --- */
+                                <form onSubmit={handleProfileUpdate} className="space-y-6">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h3 className="text-lg font-bold text-slate-800">Edit Information</h3>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
                                             <input
-                                                className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500"
-                                                value={profileData.fatherName || ""}
-                                                onChange={(e) => setProfileData({ ...profileData, fatherName: e.target.value })}
+                                                className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 transition-all bg-slate-50"
+                                                value={profileData.name || ""}
+                                                onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Mother's Name</label>
-                                            <input
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">Email <span className="text-xs text-slate-400">(Read Only)</span></label>
+                                            <div className="relative">
+                                                <FaEnvelope className="absolute left-3 top-3 text-slate-400" />
+                                                <input
+                                                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 bg-slate-100 text-slate-500 cursor-not-allowed"
+                                                    value={profileData.email || ""}
+                                                    readOnly
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Additional Fields for Students/Teachers */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">Phone Number</label>
+                                            <div className="relative">
+                                                <FaPhone className="absolute left-3 top-3 text-slate-400" />
+                                                <input
+                                                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 transition-all"
+                                                    value={profileData.phoneNumber || ""}
+                                                    onChange={(e) => setProfileData({ ...profileData, phoneNumber: e.target.value })}
+                                                    placeholder="+91..."
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">Blood Group</label>
+                                            <select
                                                 className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500"
-                                                value={profileData.motherName || ""}
-                                                onChange={(e) => setProfileData({ ...profileData, motherName: e.target.value })}
+                                                value={profileData.bloodGroup || ""}
+                                                onChange={(e) => setProfileData({ ...profileData, bloodGroup: e.target.value })}
+                                            >
+                                                <option value="">Select</option>
+                                                <option value="A+">A+</option>
+                                                <option value="A-">A-</option>
+                                                <option value="B+">B+</option>
+                                                <option value="B-">B-</option>
+                                                <option value="O+">O+</option>
+                                                <option value="O-">O-</option>
+                                                <option value="AB+">AB+</option>
+                                                <option value="AB-">AB-</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">Date of Birth</label>
+                                            <input
+                                                type="date"
+                                                className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 transition-all"
+                                                value={profileData.dob ? new Date(profileData.dob).toISOString().split('T')[0] : ""}
+                                                onChange={(e) => setProfileData({ ...profileData, dob: e.target.value })}
                                             />
                                         </div>
-                                    </>
-                                )}
-                            </div>
 
-                            <div className="flex justify-end pt-4 border-t border-slate-100">
-                                <button
-                                    type="submit"
-                                    disabled={saving}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-0.5 flex items-center"
-                                >
-                                    {saving ? "Saving..." : <><FaSave className="mr-2" /> Save Changes</>}
-                                </button>
-                            </div>
-                        </form>
+                                        <div className="md:col-span-2">
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">Residential Address</label>
+                                            <div className="relative">
+                                                <FaMapMarkerAlt className="absolute left-3 top-3 text-slate-400" />
+                                                <textarea
+                                                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 transition-all"
+                                                    value={profileData.address || ""}
+                                                    onChange={(e) => setProfileData({ ...profileData, address: e.target.value })}
+                                                    rows="3"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {user?.role === 'student' && (
+                                            <>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Father's Name</label>
+                                                    <input
+                                                        className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500"
+                                                        value={profileData.fatherName || ""}
+                                                        onChange={(e) => setProfileData({ ...profileData, fatherName: e.target.value })}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Mother's Name</label>
+                                                    <input
+                                                        className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500"
+                                                        value={profileData.motherName || ""}
+                                                        onChange={(e) => setProfileData({ ...profileData, motherName: e.target.value })}
+                                                    />
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+
+                                    <div className="flex justify-end pt-4 border-t border-slate-100 gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => { setIsEditing(false); setPreviewImage(null); }}
+                                            className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            disabled={saving}
+                                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-0.5 flex items-center"
+                                        >
+                                            {saving ? "Saving..." : <><FaSave className="mr-2" /> Save Changes</>}
+                                        </button>
+                                    </div>
+                                </form>
+                            )}
+                        </>
                     )}
 
                     {activeTab === "security" && (

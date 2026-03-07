@@ -280,6 +280,16 @@ const LibraryHome = () => {
                         {book.title}
                       </h6>
                       <p className="text-sm font-medium text-slate-500">by <span className="text-slate-700">{book.author}</span></p>
+                      {book.pdfUrl && (
+                        <a
+                          href={book.pdfUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-2 inline-block px-3 py-1 bg-purple-100 text-purple-700 text-xs font-bold rounded-full hover:bg-purple-200 transition"
+                        >
+                          📖 Read Online
+                        </a>
+                      )}
                     </div>
 
                     <div className="mt-auto pt-4 border-t border-slate-100">

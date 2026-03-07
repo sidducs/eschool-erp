@@ -4,7 +4,7 @@ import { FaClipboardList, FaChartPie, FaPrint } from "react-icons/fa";
 import { AuthContext } from "../context/AuthContext";
 import StudentReportCard from "./StudentReportCard";
 
-function StudentResults() {
+function StudentResults({ studentId }) {
   const { user } = useContext(AuthContext);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,7 +13,12 @@ function StudentResults() {
   useEffect(() => {
     const fetchResults = async () => {
       try {
-        const res = await api.get("/api/results/student");
+        let endpoint = "/api/results/student";
+        if (studentId) {
+          endpoint = `/api/results/student/${studentId}`;
+        }
+
+        const res = await api.get(endpoint);
         setResults(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error("Failed to load results", err);
@@ -22,7 +27,7 @@ function StudentResults() {
       }
     };
     fetchResults();
-  }, []);
+  }, [studentId]);
 
   // Helper for color based on percentage
   const getColorClass = (pct) => {

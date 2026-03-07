@@ -1,7 +1,5 @@
 # 🎓 ESchool - Modern School Management System (ERP)
 
-![ESchool Banner](https://via.placeholder.com/1200x400?text=ESchool+ERP+System)
-
 A full-stack **MERN** (MongoDB, Express, React, Node.js) School ERP application designed to digitize generic school operations. It features a robust **Role-Based Access Control (RBAC)** system for Admins, Teachers, and Students, along with modern features like Hybrid Registration, AI-powered Remarks, and Dynamic Timetables.
 
 ---
@@ -84,17 +82,7 @@ The app should now be running at `http://localhost:3000`!
 
 ---
 
-## 📸 Screenshots
 
-| Admin Dashboard | Student Profile |
-|:---:|:---:|
-| ![Admin](https://via.placeholder.com/400x200?text=Admin+Dashboard) | ![Student](https://via.placeholder.com/400x200?text=Student+Profile) |
-
-| Timetable Grid | Fee Receipt |
-|:---:|:---:|
-| ![Timetable](https://via.placeholder.com/400x200?text=Timetable+Grid) | ![Receipt](https://via.placeholder.com/400x200?text=Fee+Receipt) |
-
----
 
 ## 🤝 Contribution
 

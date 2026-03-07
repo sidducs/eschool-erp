@@ -10,7 +10,8 @@ const AddBook = () => {
     description: '',
     category: '',
     totalCopies: 1,
-    location: ''
+    location: '',
+    pdfUrl: ''
   });
   const [loading, setLoading] = useState(false);
 
@@ -122,6 +123,32 @@ const AddBook = () => {
               value={formData.location}
               className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-medium text-slate-700 placeholder-slate-400"
               placeholder="e.g. A-12, Row 3"
+              onChange={handleChange}
+            />
+          </div>
+
+          {/* E-Book Link (PDF URL) */}
+          <div className="md:col-span-2">
+            <label className="block text-sm font-bold text-slate-700 mb-1">E-Book Link (PDF URL) - Optional</label>
+            <input
+              type="url"
+              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-sans"
+              placeholder="https://cloudinary.com/..."
+              value={formData.pdfUrl}
+              onChange={(e) => setFormData({ ...formData, pdfUrl: e.target.value })}
+            />
+          </div>
+
+
+          {/* PDF URL */}
+          <div className="md:col-span-2">
+            <label className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">E-Book Link (PDF/Resource URL) - Optional</label>
+            <input
+              type="url"
+              name="pdfUrl"
+              value={formData.pdfUrl}
+              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-medium text-slate-700 placeholder-slate-400"
+              placeholder="https://example.com/book.pdf"
               onChange={handleChange}
             />
           </div>

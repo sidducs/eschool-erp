@@ -17,4 +17,7 @@ router.post("/", protect, markAttendance);
 // Student views attendance
 router.get("/me", protect, getMyAttendance);
 
+// Parent views child attendance
+router.get("/student/:studentId", protect, require("../controllers/attendanceController").getAttendanceByStudentId);
+
 module.exports = router;

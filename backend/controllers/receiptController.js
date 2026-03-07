@@ -1,32 +1,38 @@
 const PDFDocument = require("pdfkit");
 const path = require("path");
 const StudentFee = require("../models/StudentFee");
+const FeeStructure = require("../models/FeeStructure");
 
 // Helper to sanitize filenames (remove spaces)
 const getSafeName = (name) => name.replace(/\s+/g, "_");
 
-// Admin download receipt
+// Admin download receipt (By Fee ID)
 const generateFeeReceipt = async (req, res) => {
   try {
-    const { studentId } = req.params;
+    const { id } = req.params;
+    console.log("generateFeeReceipt: Request for Fee ID:", id);
 
-    const fee = await StudentFee.findOne({ studentId })
+    const fee = await StudentFee.findById(id)
       .populate("studentId", "name email")
       .populate("classId", "name section");
 
-    if (!fee) return res.status(404).json({ message: "Fee record not found" });
+    if (!fee) {
+      console.log("generateFeeReceipt: Record not found in DB");
+      return res.status(404).json({ message: "Fee record not found" });
+    }
 
     const doc = new PDFDocument({ margin: 50 });
-    const safeName = getSafeName(fee.studentId.name);
+    const safeName = fee.studentId ? getSafeName(fee.studentId.name) : "Student";
 
     res.setHeader("Content-Type", "application/pdf");
-    // ✅ FIX: Dynamic Filename
-    res.setHeader("Content-Disposition", `attachment; filename=Receipt_${safeName}.pdf`);
+    // ✅ FIX: Dynamic Filename with inline for Preview
+    res.setHeader("Content-Disposition", `inline; filename="Receipt_${safeName}.pdf"`);
 
     doc.pipe(res);
     generatePDFContent(doc, fee); // Refactored content generation
     doc.end();
   } catch (error) {
+    console.error("Receipt Error:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -46,8 +52,8 @@ const generateMyFeeReceipt = async (req, res) => {
     const safeName = getSafeName(fee.studentId.name);
 
     res.setHeader("Content-Type", "application/pdf");
-    // ✅ FIX: Dynamic Filename
-    res.setHeader("Content-Disposition", `attachment; filename=Receipt_${safeName}.pdf`);
+    // ✅ FIX: Dynamic Filename with inline for Preview
+    res.setHeader("Content-Disposition", `inline; filename="Receipt_${safeName}.pdf"`);
 
     doc.pipe(res);
     generatePDFContent(doc, fee);
@@ -60,11 +66,11 @@ const generateMyFeeReceipt = async (req, res) => {
 
 const SchoolSettings = require("../models/SchoolSettings");
 
-// Helper function to draw PDF content (Shared by both)
+
 const generatePDFContent = async (doc, fee) => {
   // Fetch School Settings
   let settings = await SchoolSettings.findOne();
-  if (!settings) settings = {}; // Fallback to schema defaults if not found
+  if (!settings) settings = {};
 
   const schoolName = settings.schoolName || "ESchool Academy";
   const schoolAddress = settings.address || "123 Education Lane, Knowledge City";
@@ -132,21 +138,42 @@ const generatePDFContent = async (doc, fee) => {
   doc.fillColor("#000000").font("Helvetica-Bold").text("Description", 70, tableTop + 10);
   doc.text("Amount (Rs.)", 400, tableTop + 10, { align: "right", width: 130 });
 
-  // Table Row 1: Total Fee
-  doc.rect(50, tableTop + 30, 500, 30).stroke();
-  doc.font("Helvetica").text("Total Academic Fee", 70, tableTop + 40);
-  doc.text(fee.totalFee.toLocaleString(), 400, tableTop + 40, { align: "right", width: 130 });
+  // Breakdown (Dynamic)
+  let currentY = tableTop + 40;
 
-  // Table Row 2: Paid Amount
-  doc.rect(50, tableTop + 60, 500, 30).stroke();
-  doc.font("Helvetica").text("Amount Paid", 70, tableTop + 70);
-  doc.fillColor("#008000").text("- " + fee.paidAmount.toLocaleString(), 400, tableTop + 70, { align: "right", width: 130 });
+  if (fee.breakdown && fee.breakdown.length > 0) {
+    fee.breakdown.forEach((item) => {
+      doc.rect(50, currentY - 10, 500, 30).stroke();
+      doc.font("Helvetica").text(item.name || item.title, 70, currentY);
+      doc.text(item.amount.toLocaleString(), 400, currentY, { align: "right", width: 130 });
+      currentY += 30;
+    });
+  } else {
+    // Fallback if no breakdown
+    doc.rect(50, currentY - 10, 500, 30).stroke();
+    doc.font("Helvetica").text("Total Academic Fee", 70, currentY);
+    doc.text(fee.totalFee.toLocaleString(), 400, currentY, { align: "right", width: 130 });
+    currentY += 30;
+  }
 
-  // Table Row 3: Pending
-  doc.rect(50, tableTop + 90, 500, 30).stroke();
-  doc.fillColor("#000000").font("Helvetica").text("Pending Balance", 70, tableTop + 100);
+  // Table Row: Paid Amount
+  doc.rect(50, currentY - 10, 500, 30).stroke();
+  doc.font("Helvetica").text("Amount Paid", 70, currentY);
+  doc.fillColor("#008000").text("- " + fee.paidAmount.toLocaleString(), 400, currentY, { align: "right", width: 130 });
+  currentY += 30;
+
+  // Table Row: Pending
+  doc.rect(50, currentY - 10, 500, 30).stroke();
+  doc.fillColor("#000000").font("Helvetica-Bold").text("Pending Balance", 70, currentY);
   const pending = fee.totalFee - fee.paidAmount;
-  doc.fillColor(pending > 0 ? "#FF0000" : "#000000").text(pending.toLocaleString(), 400, tableTop + 100, { align: "right", width: 130 });
+  doc.fillColor(pending > 0 ? "#FF0000" : "#000000").text(pending.toLocaleString(), 400, currentY, { align: "right", width: 130 });
+  currentY += 30;
+
+  // Breakdown Note
+  if (pending > 0) {
+    doc.moveDown(2);
+    doc.fontSize(8).fillColor("#555555").text("* Please clear pending dues.", 50, currentY + 20);
+  }
 
   // Status Badge
   doc.moveDown(4);

@@ -22,4 +22,9 @@ router.put("/users/:id", protect, isAdmin, updateUser);
 router.put("/approve/:id", protect, isAdmin, approveStudent); // Approval Route
 router.put("/reset-password/:id", protect, isAdmin, resetPassword);
 
+// Security Routes
+const { getAuditLogs, downloadBackup } = require("../controllers/securityController");
+router.get("/audit-logs", protect, isAdmin, getAuditLogs);
+router.get("/backup", protect, isAdmin, downloadBackup);
+
 module.exports = router;

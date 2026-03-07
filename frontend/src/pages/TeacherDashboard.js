@@ -3,14 +3,21 @@ import api from "../services/api";
 import { AuthContext } from "../context/AuthContext";
 import Loader from "../components/Loader";
 import AlertMessage from "../components/AlertMessage";
+import TeacherAssignments from "./TeacherAssignments";
+import TeacherQuizzes from "./TeacherQuizzes";
 import {
-   FaChalkboardTeacher, FaClipboardCheck, FaCalendarAlt,
+   FaChalkboardTeacher, FaClipboardCheck, FaCalendarAlt, FaCalendarCheck,
    FaUserGraduate, FaBell, FaSignOutAlt, FaBars, FaCheckCircle,
-   FaSave, FaMagic, FaSpinner, FaBullhorn, FaBookReader, FaTimes
+   FaSave, FaMagic, FaSpinner, FaBullhorn, FaBookReader, FaTimes, FaClipboardList,
+   FaLightbulb, FaCommentDots, FaQuestionCircle
 } from "react-icons/fa";
 
 import LibraryDashboard from "./LibraryDashboard";
 import TeacherTimetable from "./TeacherTimetable";
+// import StudentLeaves from "./StudentLeaves"; // Removed unused import
+import AdminLeaves from "./AdminLeaves"; // Added for approval
+import Chat from "./Chat";
+import DoubtForum from "./DoubtForum";
 
 function TeacherDashboard() {
    const { user, logout } = useContext(AuthContext);
@@ -162,8 +169,13 @@ function TeacherDashboard() {
 
    const menuItems = [
       { id: "dashboard", label: "Overview", icon: FaChalkboardTeacher },
+      { id: "chat", label: "Messages", icon: FaCommentDots },
+      { id: "assignments", label: "Assignments", icon: FaClipboardList },
+      { id: "doubts", label: "Discussion Forum", icon: FaQuestionCircle },
+      { id: "quizzes", label: "Online Quizzes", icon: FaLightbulb },
       { id: "attendance", label: "Mark Attendance", icon: FaClipboardCheck },
       { id: "marks", label: "Enter Marks (AI)", icon: FaMagic },
+      { id: "leaves", label: "Leave Requests", icon: FaCalendarCheck },
       { id: "library", label: "Library Hub", icon: FaBookReader },
       { id: "timetable", label: "My Timetable", icon: FaCalendarAlt },
    ];
@@ -300,6 +312,20 @@ function TeacherDashboard() {
                   </div>
                )}
 
+               {/* Assignments View */}
+               {activeMenu === "assignments" && (
+                  <div className="animate-fadeIn">
+                     <TeacherAssignments />
+                  </div>
+               )}
+
+               {/* Quizzes View */}
+               {activeMenu === "quizzes" && (
+                  <div className="animate-fadeIn">
+                     <TeacherQuizzes />
+                  </div>
+               )}
+
                {/* Attendance View */}
                {activeMenu === "attendance" && (
                   <div className="bg-white rounded-xl border border-slate-200 shadow-sm animate-fadeIn">
@@ -327,14 +353,30 @@ function TeacherDashboard() {
                               {data.classes.map(c => <option key={c._id} value={c._id}>{c.name} {c.section ? `- ${c.section}` : ''}</option>)}
                            </select>
                         </div>
-                        <div>
-                           <label className="block text-sm font-medium text-slate-700 mb-1">Select Date</label>
-                           <input
-                              type="date"
-                              className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              value={selection.date}
-                              onChange={(e) => setSelection(prev => ({ ...prev, date: e.target.value }))}
-                           />
+                        <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+                           <div>
+                              <label className="block text-sm font-medium text-slate-700 mb-1">Select Date</label>
+                              <input
+                                 type="date"
+                                 className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                 value={selection.date}
+                                 onChange={(e) => setSelection(prev => ({ ...prev, date: e.target.value }))}
+                              />
+                           </div>
+                           <div>
+                              <label className="block text-sm font-medium text-slate-700 mb-1">Select Subject (Optional)</label>
+                              <input
+                                 type="text"
+                                 className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                 placeholder="e.g. Mathematics"
+                                 value={selection.subject || ""}
+                                 onChange={(e) => setSelection(prev => ({ ...prev, subject: e.target.value }))}
+                                 list="subject-suggestions"
+                              />
+                              <datalist id="subject-suggestions">
+                                 {[...new Set([...data.timetable.map(t => t.subject), ...data.exams.map(e => e.subject)])].filter(Boolean).map(s => <option key={s} value={s} />)}
+                              </datalist>
+                           </div>
                         </div>
                      </div>
 
@@ -484,6 +526,24 @@ function TeacherDashboard() {
                {activeMenu === "timetable" && (
                   <div className="animate-fadeIn">
                      <TeacherTimetable />
+                  </div>
+               )}
+
+               {activeMenu === "chat" && (
+                  <div className="animate-fadeIn">
+                     <Chat />
+                  </div>
+               )}
+
+               {activeMenu === "doubts" && (
+                  <div className="animate-fadeIn">
+                     <DoubtForum />
+                  </div>
+               )}
+
+               {activeMenu === "leaves" && (
+                  <div className="animate-fadeIn">
+                     <AdminLeaves />
                   </div>
                )}
 

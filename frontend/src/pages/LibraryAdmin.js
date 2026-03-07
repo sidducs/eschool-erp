@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import api from "../services/api";
 import { FaShieldAlt, FaUndo } from "react-icons/fa";
+import ConfirmationModal from "../components/ConfirmationModal";
 
 const LibraryAdmin = () => {
     const [transactions, setTransactions] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [modal, setModal] = useState({ isOpen: false, title: "", message: "", onConfirm: null, isDanger: false });
 
     const fetchTransactions = async () => {
         try {
@@ -16,18 +18,37 @@ const LibraryAdmin = () => {
 
     useEffect(() => { fetchTransactions(); }, []);
 
-    const handleReturn = async (transactionId, bookId) => {
-        if (!window.confirm("Mark as returned?")) return;
+    const confirmReturn = async (transactionId, bookId) => {
         try {
             await api.put(`/api/library/return/${transactionId}`, { bookId });
             fetchTransactions();
         } catch (err) { alert("Error returning book"); }
     };
 
+    const handleReturn = (transactionId, bookId) => {
+        setModal({
+            isOpen: true,
+            title: "Return Book",
+            message: "Mark this book as returned?",
+            confirmText: "Yes, Return",
+            isDanger: false,
+            onConfirm: () => confirmReturn(transactionId, bookId)
+        });
+    };
+
     if (loading) return <div className="text-center py-6 text-slate-500">Loading transactions...</div>;
 
     return (
         <div className="animate-fadeIn">
+            <ConfirmationModal
+                isOpen={modal.isOpen}
+                onClose={() => setModal({ ...modal, isOpen: false })}
+                onConfirm={modal.onConfirm}
+                title={modal.title}
+                message={modal.message}
+                confirmText={modal.confirmText}
+                isDanger={modal.isDanger}
+            />
             <h3 className="text-base font-bold text-slate-800 mb-3 flex items-center gap-2">
                 <FaShieldAlt className="text-purple-600" /> Library Transactions
             </h3>

@@ -8,6 +8,11 @@ const attendanceSchema = new mongoose.Schema(
       required: true,
     },
 
+    subject: {
+      type: String, // E.g., "Mathematics", "Science" - Optional for class-wise, required for subject-wise
+      default: null
+    },
+
     student: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

@@ -35,4 +35,16 @@ const admin = (req, res, next) => {
   }
 };
 
-module.exports = { protect, admin };
+const authorize = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ message: `User role ${req.user.role} is not authorized to access this route` });
+    }
+    next();
+  };
+};
+
+const teacher = authorize("teacher");
+const student = authorize("student");
+
+module.exports = { protect, admin, teacher, student, authorize };

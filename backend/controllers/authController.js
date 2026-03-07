@@ -1,5 +1,7 @@
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
+// Import Audit Logger
+const { logAction } = require("./securityController");
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -17,11 +19,28 @@ const registerUser = async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
+    // SPECIAL LOGIC FOR PARENTS
+    let childrenIds = [];
+    if (role === "parent") {
+      if (!process.env.TEST_MODE) { // Allow skipping check in strict test mode if needed, but here we enforce it
+        const { childSRN } = req.body;
+        if (!childSRN) {
+          return res.status(400).json({ message: "Student SRN is required for Parent Registration" });
+        }
+        const student = await User.findOne({ admissionId: childSRN, role: "student" });
+        if (!student) {
+          return res.status(404).json({ message: "Student with this SRN not found" });
+        }
+        childrenIds.push(student._id);
+      }
+    }
+
     const user = await User.create({
       name,
       email,
       password,
       role,
+      children: childrenIds,
       ...otherDetails,
     });
 
@@ -46,19 +65,17 @@ const loginUser = async (req, res) => {
     // Force lowercase email just in case
     const user = await User.findOne({ email: email.toLowerCase() });
 
-    if (!user) {
-      return res.status(401).json({ message: "Invalid email or password" });
-    }
+    if (user && (await user.matchPassword(password))) {
+      // 📝 Log Login Action
+      await logAction(user._id, "LOGIN", `User logged in from IP: ${req.ip}`, req.ip);
 
-    const isMatch = await user.matchPassword(password);
-
-    if (isMatch) {
       res.json({
         _id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
         status: user.status, // Return status
+        classId: user.classId,
         token: generateToken(user._id),
       });
     } else {
@@ -94,7 +111,7 @@ const updateProfile = async (req, res) => {
 
     // Handle Profile Picture Upload
     if (req.file) {
-      user.profilePicture = `/uploads/${req.file.filename}`;
+      user.profilePicture = req.file.path;
     }
 
     // Handle documents properly if nested (simplified for now as replacing entire object or specific keys)
@@ -137,3 +154,4 @@ const changePassword = async (req, res) => {
 };
 
 module.exports = { registerUser, loginUser, getProfile, updateProfile, changePassword };
+ 

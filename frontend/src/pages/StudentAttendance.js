@@ -1,20 +1,27 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
 
-function StudentAttendance() {
+function StudentAttendance({ studentId }) {
   const [data, setData] = useState(null);
 
   useEffect(() => {
     const fetchAttendance = async () => {
       try {
-        const res = await api.get("/api/attendance/me");
+        let endpoint = "/api/attendance/me";
+
+        // If studentId prop is passed (e.g. from Parent Dashboard), use the specific student endpoint
+        if (studentId) {
+          endpoint = `/api/attendance/student/${studentId}`;
+        }
+
+        const res = await api.get(endpoint);
         setData(res.data);
       } catch (err) {
         console.error("Failed to fetch attendance", err);
       }
     };
     fetchAttendance();
-  }, []);
+  }, [studentId]);
 
   if (!data) {
     return <div className="p-4 text-center text-slate-500 font-medium animate-pulse">Loading attendance records...</div>;
@@ -62,10 +69,10 @@ function StudentAttendance() {
                     <td className="px-6 py-4 font-medium text-slate-700">{new Date(r.date).toDateString()}</td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${r.status === 'Present'
-                          ? "bg-green-100 text-green-800"
-                          : r.status === 'Absent'
-                            ? "bg-red-100 text-red-800"
-                            : "bg-slate-100 text-slate-800"
+                        ? "bg-green-100 text-green-800"
+                        : r.status === 'Absent'
+                          ? "bg-red-100 text-red-800"
+                          : "bg-slate-100 text-slate-800"
                         }`}>
                         {r.status}
                       </span>

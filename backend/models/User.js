@@ -24,9 +24,15 @@ const userSchema = new mongoose.Schema(
 
     role: {
       type: String,
-      enum: ["admin", "teacher", "student"],
+      enum: ["admin", "teacher", "student", "parent", "accountant"],
       default: "student",
     },
+
+    // 👨‍👩‍👧 Parent: Linked Children
+    children: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User"
+    }],
 
     // 🚦 Account Status (For Hybrid Registration)
     status: {
@@ -59,6 +65,8 @@ const userSchema = new mongoose.Schema(
     bloodGroup: { type: String, default: null },
     address: { type: String, default: null },
     phoneNumber: { type: String, default: null },
+    parentEmail: { type: String, default: null }, // For notifications
+    parentPhoneNumber: { type: String, default: null }, // For SMS/WhatsApp (Future)
 
     // 🏫 Admission Details
     admissionId: {
@@ -73,6 +81,13 @@ const userSchema = new mongoose.Schema(
       transferCertificate: { type: String, default: null },
       previousMarksheet: { type: String, default: null },
       birthCertificate: { type: String, default: null }
+    },
+
+    // 🚌 Transport Details
+    transport: {
+      routeId: { type: mongoose.Schema.Types.ObjectId, ref: "Route", default: null },
+      stopName: { type: String, default: null },
+      transportFee: { type: Number, default: 0 }
     },
   },
   { timestamps: true }

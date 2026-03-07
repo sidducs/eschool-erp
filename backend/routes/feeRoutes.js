@@ -8,6 +8,7 @@ const { isAdmin } = require("../middleware/adminMiddleware");
 const {
   createFeeStructure,
   getFeeStructures,
+  getFeeStructureByClass,
   assignFeeToStudent,
   updatePayment,
   getAllStudentFees,
@@ -23,6 +24,7 @@ const {
 // ADMIN ROUTES
 router.post("/", protect, isAdmin, createFeeStructure);
 router.get("/", protect, isAdmin, getFeeStructures);
+router.get("/structure/:classId", protect, isAdmin, getFeeStructureByClass);
 
 router.post("/assign", protect, isAdmin, assignFeeToStudent);
 
@@ -42,9 +44,9 @@ router.get(
   generateMyFeeReceipt
 );
 
-// ADMIN → download any student's receipt
+// ADMIN → download any student's receipt by Fee ID
 router.get(
-  "/receipt/:studentId",
+  "/receipt/:id",
   protect,
   isAdmin,
   generateFeeReceipt

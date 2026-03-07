@@ -3,13 +3,14 @@ import api from "../services/api";
 import { AuthContext } from "../context/AuthContext";
 import Loader from "../components/Loader";
 import { useToast } from "../context/ToastContext"; // Import Global Toast
+import ConfirmationModal from "../components/ConfirmationModal";
 import { Doughnut, Bar } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from "chart.js";
 import {
   FaTachometerAlt, FaUsers, FaMoneyBillWave, FaChalkboardTeacher,
   FaClipboardCheck, FaBook, FaUpload, FaBullhorn,
   FaUserGraduate, FaUserTie, FaBars, FaArrowLeft, FaEdit, FaTrash, FaPaperPlane,
-  FaSearch, FaPrint, FaBookReader, FaTimes, FaUserPlus, FaCogs, FaMagic, FaUserCheck, FaLock
+  FaSearch, FaPrint, FaBookReader, FaTimes, FaUserPlus, FaCogs, FaMagic, FaUserCheck, FaLock, FaBus, FaCommentDots, FaCalendarAlt
 } from "react-icons/fa";
 
 import LibraryDashboard from "./LibraryDashboard";
@@ -17,6 +18,11 @@ import AdminAdmission from "./AdminAdmission";
 import AdminCreateFeeStructure from "./AdminCreateFeeStructure";
 import AdminSettings from "./AdminSettings";
 import AdminTimetable from "./AdminTimetable";
+import AdminLeaves from "./AdminLeaves";
+import Chat from "./Chat"; // Enabled
+import TransportManager from "./TransportManager";
+import SendNotification from "./SendNotification";
+import AdminAssignFee from "./AdminAssignFee";
 
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
@@ -33,6 +39,7 @@ function AdminDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [paymentInputs, setPaymentInputs] = useState({}); // New State for Payments
   const [refreshKey, setRefreshKey] = useState(0);
+  const [modal, setModal] = useState({ isOpen: false, title: "", message: "", onConfirm: null });
 
   const chartData = {
     att: {
@@ -69,7 +76,10 @@ function AdminDashboard() {
       try {
         const results = await Promise.allSettled([
           api.get("/api/admin/users"), api.get("/api/classes"), api.get("/api/dashboard/admin"),
-          api.get("/api/fees/student-fees"), api.get("/api/exams"), api.get("/api/notices")
+          api.get("/api/fees/student-fees"), api.get("/api/exams"), api.get("/api/notices"),
+          api.get("/api/ai/weak-students"),
+          api.get("/api/admin/audit-logs"),
+          api.get("/api/events")
         ]);
         setData({
           users: results[0].status === 'fulfilled' ? results[0].value.data : [],
@@ -77,7 +87,10 @@ function AdminDashboard() {
           stats: results[2].status === 'fulfilled' ? results[2].value.data : {},
           fees: results[3].status === 'fulfilled' ? results[3].value.data : [],
           exams: results[4].status === 'fulfilled' ? results[4].value.data : [],
-          notices: results[5].status === 'fulfilled' ? results[5].value.data : []
+          notices: results[5].status === 'fulfilled' ? results[5].value.data : [],
+          atRisk: results[6].status === 'fulfilled' ? results[6].value.data : [],
+          logs: results[7].status === 'fulfilled' ? results[7].value.data : [],
+          events: results[8].status === 'fulfilled' ? results[8].value.data : []
         });
       } catch (err) {
         console.error("Failed to load dashboard data", err);
@@ -150,16 +163,23 @@ function AdminDashboard() {
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: FaTachometerAlt },
     { id: "admission", label: "Admission", icon: FaUserPlus },
-    { id: "pending", label: "Pending Approvals", icon: FaUserCheck }, // New Menu
+    { id: "pending", label: "Pending Approvals", icon: FaUserCheck },
     { id: "users", label: "User Management", icon: FaUsers },
-    { id: "classes", label: "Academics", icon: FaChalkboardTeacher },
     { id: "fees", label: "Finance & Fees", icon: FaMoneyBillWave },
-    { id: "library", label: "Library Hub", icon: FaBookReader },
+    { id: "classes", label: "Classes & Sections", icon: FaChalkboardTeacher },
+    { id: "leaves", label: "Leave Requests", icon: FaUserCheck },
     { id: "exams", label: "Examinations", icon: FaBook },
-    { id: "timetable", label: "Timetable", icon: FaClipboardCheck },
+    { id: "timetable", label: "Timetable", icon: FaCalendarAlt },
+    { id: "library", label: "Library Hub", icon: FaBookReader },
+    { id: "transport", label: "Transport", icon: FaBus },
+    { id: "events", label: "Academic Calendar", icon: FaCalendarAlt },
     { id: "notices", label: "Notice Board", icon: FaBullhorn },
-    { id: "bulk", label: "Bulk Upload", icon: FaUpload },
-    { id: "settings", label: "Settings", icon: FaCogs },
+    { id: "chat", label: "Messages", icon: FaCommentDots },
+    { id: "analytics", label: "AI Analytics", icon: FaMagic },
+    { id: "audit", label: "Audit Logs", icon: FaLock },
+    { id: "settings", label: "System Settings", icon: FaCogs },
+    { id: "backup", label: "System Backup", icon: FaUpload },
+    { id: "send-notification", label: "Send Alerts", icon: FaPaperPlane },
   ];
 
   return (
@@ -198,7 +218,7 @@ function AdminDashboard() {
               }}
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${activeMenu.startsWith(item.id)
                 ? "bg-blue-600 text-white shadow-lg shadow-blue-900/50"
-                : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                : "text-slate-100 hover:bg-slate-800 hover:text-white"
                 }`}
             >
               <item.icon className={`text-lg ${activeMenu.startsWith(item.id) ? "text-white" : "text-slate-500 group-hover:text-white"}`} />
@@ -218,7 +238,7 @@ function AdminDashboard() {
               <FaBars className="text-slate-600" />
             </button>
             <h2 className="text-xl font-bold text-slate-800 uppercase tracking-wide">
-              {activeMenu.split("-")[0].replace("users", "User Management").replace("classes", "Academic Classes")}
+              {activeMenu.split("-")[0].replace("users", "User Management").replace("classes", "Classes & Sections")}
             </h2>
           </div>
 
@@ -269,7 +289,162 @@ function AdminDashboard() {
 
           {activeMenu === "library" && <LibraryDashboard />}
 
+
           {activeMenu === "settings" && <AdminSettings />}
+
+          {activeMenu === "leaves" && <AdminLeaves />}
+
+          {activeMenu === "transport" && <TransportManager />}
+
+          {/* AUDIT LOGS */}
+          {activeMenu === "audit" && (
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden animate-fadeIn">
+              <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                <h5 className="font-bold text-slate-800 flex items-center gap-2">
+                  <FaLock className="text-slate-500" /> System Security Audit Logs
+                </h5>
+                <span className="text-xs text-slate-400">Tracking user activities for security</span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="border-b border-slate-100 text-xs uppercase text-slate-500 font-semibold">
+                      <th className="px-6 py-4">User</th>
+                      <th className="px-6 py-4">Action</th>
+                      <th className="px-6 py-4">Details</th>
+                      <th className="px-6 py-4">IP Address</th>
+                      <th className="px-6 py-4">Time</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {(data.logs || []).map((log, i) => (
+                      <tr key={i} className="hover:bg-slate-50 text-sm">
+                        <td className="px-6 py-4 font-bold text-slate-700">
+                          {log.userId?.name || "Unknown"} <span className="text-xs font-normal text-slate-400">({log.userId?.role})</span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-mono font-bold">{log.action}</span>
+                        </td>
+                        <td className="px-6 py-4 text-slate-600">{log.details}</td>
+                        <td className="px-6 py-4 text-slate-500 font-mono text-xs">{log.ipAddress || "-"}</td>
+                        <td className="px-6 py-4 text-slate-500">{new Date(log.timestamp).toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* BACKUP */}
+          {activeMenu === "backup" && (
+            <div className="max-w-4xl mx-auto space-y-6 animate-fadeIn">
+              <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
+                <h5 className="font-bold text-xl text-slate-800 mb-6 flex items-center gap-2">
+                  <FaUpload /> System Maintenance & Backup
+                </h5>
+
+                <div className="bg-blue-50 border border-blue-100 rounded-xl p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+                  <div>
+                    <h6 className="font-bold text-blue-900 text-lg mb-1">Full Database Backup</h6>
+                    <p className="text-blue-700 text-sm">Download a ZIP file containing all JSON collections (Users, Fees, Classes, etc.) for disaster recovery.</p>
+                  </div>
+                  <button
+                    onClick={() => window.open("http://localhost:5000/api/admin/backup", "_blank")}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-transform transform hover:-translate-y-0.5 flex items-center gap-2"
+                  >
+                    <FaUpload className="rotate-180" /> Export Data
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeMenu === "send-notification" && <SendNotification />}
+
+          {activeMenu === "chat" && <Chat />}
+
+          {/* SETTINGS - Removed Duplicate Render */}
+          {activeMenu === "analytics" && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-8 rounded-2xl text-white shadow-lg">
+                <h2 className="text-3xl font-bold flex items-center gap-3">
+                  <FaMagic /> AI Student Analytics
+                </h2>
+                <p className="text-purple-100 mt-2 max-w-2xl">
+                  Our AI scans attendance records and academic results to identify students who might be falling behind.
+                  Early intervention can significantly improve student outcomes.
+                </p>
+              </div>
+
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-slate-100 bg-red-50/50 flex justify-between items-center">
+                  <h5 className="font-bold text-red-800 flex items-center gap-2">
+                    <FaUserCheck className="text-red-500" /> At-Risk Students Identified
+                  </h5>
+                  <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold">
+                    {data.atRisk?.length || 0} Alert(s)
+                  </span>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="border-b border-slate-100 text-xs uppercase text-slate-500 font-semibold">
+                        <th className="px-6 py-4">Student Name</th>
+                        <th className="px-6 py-4">Attendance</th>
+                        <th className="px-6 py-4">Avg Marks</th>
+                        <th className="px-6 py-4">Risk Factors</th>
+                        <th className="px-6 py-4 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {(data.atRisk || []).length === 0 ? (
+                        <tr>
+                          <td colSpan="5" className="px-6 py-8 text-center text-slate-400 italic">
+                            Great news! No students currently flagged as "At-Risk".
+                          </td>
+                        </tr>
+                      ) : (
+                        (data.atRisk || []).map((s, i) => (
+                          <tr key={i} className="hover:bg-slate-50">
+                            <td className="px-6 py-4 font-bold text-slate-800">
+                              {s.name}
+                              <span className="block text-xs text-slate-400 font-normal">{s.admissionId}</span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className={`font-bold ${Number(s.attendance) < 75 ? 'text-red-600' : 'text-green-600'}`}>
+                                {s.attendance}%
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className={`font-bold ${Number(s.avgMarks) < 40 ? 'text-red-600' : 'text-slate-700'}`}>
+                                {s.avgMarks}%
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex flex-wrap gap-2">
+                                {s.risks.map((r, idx) => (
+                                  <span key={idx} className="bg-red-50 text-red-700 px-2 py-1 rounded text-xs font-semibold border border-red-100">
+                                    {r}
+                                  </span>
+                                ))}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                              <button className="text-blue-600 hover:text-blue-800 text-sm font-bold hover:underline">
+                                View Profile
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* USERS MANAGEMENT */}
           {activeMenu === "users" && (
@@ -346,7 +521,12 @@ function AdminDashboard() {
                             </button>
                             <button
                               className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
-                              onClick={() => apiAction('delete', `/api/admin/users/${u._id}`, null, "User deleted successfully", null)}
+                              onClick={() => setModal({
+                                isOpen: true,
+                                title: "Delete User?",
+                                message: `Are you sure you want to delete ${u.name}? This action cannot be undone.`,
+                                onConfirm: () => apiAction('delete', `/api/admin/users/${u._id}`, null, "User deleted successfully", null)
+                              })}
                             >
                               <FaTrash size={16} />
                             </button>
@@ -488,12 +668,16 @@ function AdminDashboard() {
                                 onChange={(e) => setPaymentInputs({ ...paymentInputs, [f.studentId?._id]: e.target.value })}
                               />
                               <button
-                                className="px-3 py-1 text-xs font-bold text-green-700 bg-green-50 hover:bg-green-100 rounded border border-green-200 transition-colors"
+                                className="bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700 transition"
                                 onClick={() => {
-                                  const amt = paymentInputs[f.studentId?._id];
-                                  if (!amt) return addToast("Enter amount", "warning");
-                                  apiAction('put', '/api/fees/pay', { studentId: f.studentId._id, paidAmount: Number(amt) }, "Payment Recorded", null);
-                                  setPaymentInputs({ ...paymentInputs, [f.studentId?._id]: "" });
+                                  const amount = paymentInputs[f.studentId?._id] || 0;
+                                  if (amount <= 0) return addToast("Enter valid amount", "warning");
+                                  setModal({
+                                    isOpen: true,
+                                    title: "Confirm Payment",
+                                    message: `Record payment of ₹${amount} for student ${f.studentId?.name || "Unknown"}?`,
+                                    onConfirm: () => apiAction('put', '/api/fees/pay', { feeId: f._id, amount: Number(amount) }, "Payment Recorded", "fees")
+                                  });
                                 }}
                               >
                                 Pay
@@ -502,8 +686,8 @@ function AdminDashboard() {
                           )}
                           <button
                             className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded"
-                            onClick={() => window.open(`/receipt/${f._id}`, '_blank')}
-                            title="View/Print Receipt"
+                            onClick={() => window.open(`http://localhost:5000/api/fees/receipt/${f.studentId?._id}`, '_blank')}
+                            title="Download PDF Receipt"
                           >
                             <FaPrint />
                           </button>
@@ -549,6 +733,90 @@ function AdminDashboard() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          )}
+
+          {/* EVENTS MANAGEMENT */}
+          {activeMenu === "events" && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn">
+              {/* Event Creation Form */}
+              <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <h5 className="font-bold text-lg text-slate-800 mb-4 flex items-center gap-2">
+                  <FaCalendarAlt className="text-blue-500" /> Add Event
+                </h5>
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  apiAction('post', '/api/events', formData, "Event Added", null);
+                  setFormData({}); // Reset form
+                }} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Event Title</label>
+                    <input type="text" name="title" className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required onChange={handleInputChange} value={formData.title || ""} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Type</label>
+                    <select name="type" className="w-full px-3 py-2 border rounded-lg bg-white" onChange={handleInputChange} value={formData.type || "event"}>
+                      <option value="event">General Event</option>
+                      <option value="holiday">Holiday</option>
+                      <option value="meeting">Meeting</option>
+                      <option value="exam">Exam</option>
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Start Date</label>
+                      <input type="date" name="startDate" className="w-full px-3 py-2 border rounded-lg" required onChange={handleInputChange} value={formData.startDate || ""} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">End Date</label>
+                      <input type="date" name="endDate" className="w-full px-3 py-2 border rounded-lg" required onChange={handleInputChange} value={formData.endDate || ""} />
+                    </div>
+                  </div>
+                  <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg transition-colors shadow-sm">
+                    Add to Calendar
+                  </button>
+                </form>
+              </div>
+
+              {/* Events List */}
+              <div className="lg:col-span-2 space-y-4">
+                <h5 className="font-bold text-lg text-slate-800">Upcoming Events</h5>
+                {(!data.events || data.events.length === 0) ? (
+                  <div className="text-center py-10 text-slate-400 bg-white rounded-xl border border-dashed border-slate-300">
+                    No upcoming events scheduled.
+                  </div>
+                ) : (
+                  <div className="grid gap-4">
+                    {data.events.map(ev => (
+                      <div key={ev._id} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center group hover:border-blue-300 transition-colors">
+                        <div className="flex gap-4">
+                          <div className={`w-16 h-16 rounded-lg flex flex-col justify-center items-center text-white font-bold shadow-sm ${ev.type === 'holiday' ? 'bg-red-500' :
+                            ev.type === 'exam' ? 'bg-purple-500' : 'bg-blue-500'
+                            }`}>
+                            <span className="text-xs uppercase">{new Date(ev.startDate).toLocaleString('default', { month: 'short' })}</span>
+                            <span className="text-2xl leading-none">{new Date(ev.startDate).getDate()}</span>
+                          </div>
+                          <div>
+                            <h6 className="font-bold text-slate-800 text-lg">{ev.title}</h6>
+                            <p className="text-slate-500 text-sm">{ev.type.toUpperCase()} • {new Date(ev.startDate).toLocaleDateString()} - {new Date(ev.endDate).toLocaleDateString()}</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setModal({
+                            isOpen: true,
+                            title: "Delete Event?",
+                            message: `Delete event "${ev.title}"?`,
+                            onConfirm: () => apiAction('delete', `/api/events/${ev._id}`, null, "Event Deleted", null)
+                          })}
+                          className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -610,6 +878,21 @@ function AdminDashboard() {
                   </div>
                   <textarea className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 h-32" name="content" placeholder="Full notice details..." onChange={handleInputChange} value={formData.content || ""} required></textarea>
                 </div>
+
+                <div className="flex items-center gap-2 bg-red-50 p-3 rounded-lg border border-red-100">
+                  <input
+                    type="checkbox"
+                    id="isEmergency"
+                    name="isEmergency"
+                    checked={formData.isEmergency || false}
+                    onChange={(e) => setFormData({ ...formData, isEmergency: e.target.checked })}
+                    className="w-4 h-4 text-red-600 rounded focus:ring-red-500"
+                  />
+                  <label htmlFor="isEmergency" className="text-sm font-bold text-red-700 flex items-center gap-2">
+                    <FaBullhorn /> Mark as Emergency Broadcast (Shows Red Banner to All Users)
+                  </label>
+                </div>
+
                 <div className="flex justify-end">
                   <button className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-sm flex items-center transition-colors">
                     <FaPaperPlane className="mr-2" /> Send Broadcast
@@ -771,14 +1054,32 @@ function AdminDashboard() {
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
-                          <select className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white" name="role" value={formData.role || "student"} onChange={handleInputChange}>
-                            <option value="student">Student</option>
+                          <select className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white" name="role" value={formData.role || "teacher"} onChange={handleInputChange}>
                             <option value="teacher">Teacher</option>
                             <option value="admin">Admin</option>
+                            {/* Allow Student role only if editing an existing student */}
+                            {(activeMenu.includes("edit") || activeMenu === "users-create") && (
+                              <option value="student" disabled={activeMenu === "users-create"}>Student {activeMenu === "users-create" ? "(Use Admission)" : ""}</option>
+                            )}
                           </select>
                         </div>
                       </div>
                     </div>
+                    {/* Password Field for New Users */}
+                    {activeMenu === "users-create" && (
+                      <div className="mt-6 bg-slate-50 p-6 rounded-xl border border-slate-100">
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                        <input
+                          type="password"
+                          className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          name="password"
+                          placeholder="Set initial password"
+                          value={formData.password || ""}
+                          onChange={handleInputChange}
+                          required
+                        />
+                      </div>
+                    )}
 
                     {/* Admin Password Reset Override */}
                     {activeMenu.includes("edit") && (
@@ -868,42 +1169,96 @@ function AdminDashboard() {
                 )}
 
                 {activeMenu === "classes-assign" && (
-                  <form onSubmit={(e) => { e.preventDefault(); apiAction('post', '/api/classes/assign-student', formData, "Student Assigned", "classes") }} className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Select Student</label>
-                      <select className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-white" name="studentId" onChange={handleInputChange} required>
-                        <option value="">Choose Student...</option>
-                        {data.users.filter(u => u.role === 'student').map(s => (
-                          <option key={s._id} value={s._id}>
-                            {s.name} ({s.admissionId || "No SRN"})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                  <div className="space-y-6">
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Target Class</label>
-                      <select className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-white" name="classId" onChange={handleInputChange} required>
+                      <select
+                        className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-white"
+                        name="classId"
+                        onChange={handleInputChange}
+                        value={formData.classId || ""}
+                      >
                         <option value="">Choose Class...</option>
                         {data.classes.map(c => <option key={c._id} value={c._id}>{c.name}-{c.section}</option>)}
                       </select>
                     </div>
 
-                    <button className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg mt-4">Assign Student</button>
-                  </form>
+                    <div className="border rounded-lg overflow-hidden border-slate-200">
+                      <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex justify-between items-center">
+                        <h6 className="font-bold text-slate-700">Select Students to Assign</h6>
+                        <label className="flex items-center gap-2 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFormData(prev => ({ ...prev, selectedStudents: data.users.filter(u => u.role === 'student').map(u => u._id) }));
+                              } else {
+                                setFormData(prev => ({ ...prev, selectedStudents: [] }));
+                              }
+                            }}
+                            checked={data.users.filter(u => u.role === 'student').length > 0 && formData.selectedStudents?.length === data.users.filter(u => u.role === 'student').length}
+                          />
+                          <span className="text-sm font-semibold text-slate-600">Select All</span>
+                        </label>
+                      </div>
+                      <div className="max-h-96 overflow-y-auto bg-white">
+                        <table className="w-full text-left text-sm">
+                          <thead className="bg-slate-50 sticky top-0">
+                            <tr>
+                              <th className="px-4 py-2 w-10"></th>
+                              <th className="px-4 py-2 text-slate-500 font-semibold">Name</th>
+                              <th className="px-4 py-2 text-slate-500 font-semibold">SRN</th>
+                              <th className="px-4 py-2 text-slate-500 font-semibold">Current Class</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {data.users.filter(u => u.role === 'student').map(s => (
+                              <tr key={s._id} className={`hover:bg-slate-50 transition-colors ${formData.selectedStudents?.includes(s._id) ? "bg-blue-50/50" : ""}`}>
+                                <td className="px-4 py-3">
+                                  <input
+                                    type="checkbox"
+                                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                                    checked={formData.selectedStudents?.includes(s._id) || false}
+                                    onChange={(e) => {
+                                      const selected = formData.selectedStudents || [];
+                                      if (e.target.checked) {
+                                        setFormData(prev => ({ ...prev, selectedStudents: [...selected, s._id] }));
+                                      } else {
+                                        setFormData(prev => ({ ...prev, selectedStudents: selected.filter(id => id !== s._id) }));
+                                      }
+                                    }}
+                                  />
+                                </td>
+                                <td className="px-4 py-3 font-bold text-slate-700">{s.name}</td>
+                                <td className="px-4 py-3 font-mono text-slate-500">{s.admissionId || "N/A"}</td>
+                                <td className="px-4 py-3">
+                                  <span className={`px-2 py-1 rounded text-xs font-bold ${s.classId ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                                    {s.classId?.name ? `${s.classId.name}-${s.classId.section}` : "Unassigned"}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        if (!formData.classId) return addToast("Select a class first", "warning");
+                        if (!formData.selectedStudents?.length) return addToast("Select at least one student", "warning");
+                        apiAction('post', '/api/classes/bulk-assign', { classId: formData.classId, studentIds: formData.selectedStudents }, `Successfully assigned ${formData.selectedStudents.length} students.`, "classes");
+                        setFormData(prev => ({ ...prev, selectedStudents: [] })); // Clear selection
+                      }}
+                      className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                    >
+                      <FaUsers /> Assign {formData.selectedStudents?.length || 0} Students to Class
+                    </button>
+                  </div>
                 )}
 
-                {activeMenu === "fees-assign" && (
-                  <form onSubmit={(e) => { e.preventDefault(); apiAction('post', '/api/fees/assign', formData, "Fee Assigned", "fees") }} className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Student</label>
-                      <select className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-white" name="studentId" onChange={handleInputChange} required>
-                        <option value="">Select...</option>
-                        {(data.users || []).filter(u => u.role === 'student').map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
-                      </select>
-                    </div>
-                    <button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg mt-4">Assign Fee</button>
-                  </form>
-                )}
+                {activeMenu === "fees-assign" && <AdminAssignFee />}
 
                 {activeMenu === "exams-create" && (
                   <form onSubmit={(e) => { e.preventDefault(); apiAction('post', '/api/exams', formData, "Exam Created", "exams") }} className="space-y-4">
@@ -930,6 +1285,15 @@ function AdminDashboard() {
 
         </main>
       </div >
+
+      {/* Global Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={modal.isOpen}
+        title={modal.title}
+        message={modal.message}
+        onConfirm={modal.onConfirm}
+        onClose={() => setModal({ ...modal, isOpen: false })}
+      />
     </div >
   );
 }

@@ -1,6 +1,6 @@
 const Book = require("../models/Book");
 const Transaction = require("../models/Transaction");
-const User = require("../models/User"); // ✅ CRITICAL: Added this import
+const User = require("../models/User");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 // Initialize Gemini AI
@@ -19,12 +19,12 @@ const getAIEmbedding = async (text) => {
 
 exports.addBook = async (req, res) => {
   try {
-    const { title, author, isbn, description, category, totalCopies, location } = req.body;
+    const { title, author, isbn, description, category, totalCopies, location, pdfUrl } = req.body;
     const embedding = await getAIEmbedding(`${title} ${description} ${category}`);
 
     const newBook = new Book({
       title, author, isbn, description, category,
-      totalCopies, availableCopies: totalCopies, location,
+      totalCopies, availableCopies: totalCopies, location, pdfUrl,
       embedding: embedding
     });
 
@@ -52,7 +52,7 @@ exports.smartSearch = async (req, res) => {
       };
     }
 
-    let sortOption = { createdAt: -1 }; // Default: Newest first
+    let sortOption = { createdAt: -1 };
     if (sort === "title_asc") sortOption = { title: 1 };
     if (sort === "title_desc") sortOption = { title: -1 };
     if (sort === "author_asc") sortOption = { author: 1 };
@@ -92,8 +92,6 @@ exports.issueBook = async (req, res) => {
       return res.status(400).json({ message: "Book is not available" });
     }
 
-    // Find Student by SRN (admissionId) 
-    // Fallback: Check if client sent rollNumber variable as legacy
     const searchId = admissionId || req.body.rollNumber;
     const student = await User.findOne({ admissionId: searchId, role: "student" });
 

@@ -5,7 +5,7 @@ require("dotenv").config();
  * Initialize Gemini AI Model (FREE TIER)
  */
 const getAIModel = () => {
-  console.log("Loaded API Key:", process.env.GEMINI_API_KEY);
+
 
   if (!process.env.GEMINI_API_KEY) {
     throw new Error("GEMINI_API_KEY is missing in .env file");
@@ -23,7 +23,7 @@ const getAIModel = () => {
  * 1. Generate Timetable (Admin)
  */
 exports.generateTimetable = async (req, res) => {
-  console.log("AI Timetable Request Received");
+
 
   try {
     const { teachers, className } = req.body;
@@ -35,7 +35,7 @@ exports.generateTimetable = async (req, res) => {
       });
     }
 
-    console.log(`Class=${className}, Teachers=${teachers.length}`);
+
 
     const model = getAIModel();
 
@@ -64,14 +64,14 @@ Format:
 No explanation. No markdown.
 `;
 
-    console.log("Sending prompt to AI...");
+
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
 
     const rawText = response.text();
 
-    console.log("AI Raw:", rawText.substring(0, 150));
+
 
     // ✅ Clean AI output
     let cleanText = rawText

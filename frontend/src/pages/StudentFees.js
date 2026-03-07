@@ -39,17 +39,14 @@ function StudentDashboard() {
 
   const downloadReceipt = async () => {
     try {
-      const res = await api.get(`/api/fees/receipt/${user._id}`, {
+      const res = await api.get(`/api/fees/receipt/my`, {
         responseType: "blob",
       });
 
       const blob = new Blob([res.data], { type: "application/pdf" });
       const url = window.URL.createObjectURL(blob);
 
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "my-fee-receipt.pdf";
-      link.click();
+      window.open(url, "_blank");
     } catch {
       addToast("Failed to download receipt", "error");
     }
@@ -209,6 +206,19 @@ function StudentDashboard() {
                     </div>
                   </div>
 
+                  {fee.breakdown && fee.breakdown.length > 0 && (
+                    <div className="mb-3 border-bottom pb-2">
+                      <p className="text-muted small fw-bold text-uppercase mb-2">Fee Breakdown</p>
+                      {fee.breakdown.map((item, idx) => (
+                        <div key={idx} className="row mb-1">
+                          <div className="col-8 text-muted small">{item.name || item.title}</div>
+                          <div className="col-4 text-end small">Rs. {item.amount}</div>
+                        </div>
+                      ))}
+                      <hr className="my-2" />
+                    </div>
+                  )}
+
                   <div className="row mb-3">
                     <div className="col-5 text-muted">Total Fee</div>
                     <div className="col-7 fw-semibold">
@@ -228,8 +238,8 @@ function StudentDashboard() {
                     <div className="col-7">
                       <span
                         className={`badge ${fee.status === "PAID"
-                            ? "bg-success"
-                            : "bg-danger"
+                          ? "bg-success"
+                          : "bg-danger"
                           }`}
                       >
                         {fee.status}

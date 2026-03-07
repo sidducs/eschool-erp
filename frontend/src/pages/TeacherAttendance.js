@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
 import { FaCalendarAlt, FaCheckCircle, FaTimesCircle, FaClock, FaUserClock, FaExclamationCircle } from "react-icons/fa";
+import ConfirmationModal from "../components/ConfirmationModal";
 
 function TeacherAttendance() {
   const [classes, setClasses] = useState([]);
@@ -9,6 +10,7 @@ function TeacherAttendance() {
   const [date, setDate] = useState("");
   const [attendance, setAttendance] = useState({});
   const [loading, setLoading] = useState(false);
+  const [modal, setModal] = useState({ isOpen: false, title: "", message: "", onConfirm: null, isDanger: false });
 
   useEffect(() => {
     const fetchClasses = async () => {
@@ -48,7 +50,7 @@ function TeacherAttendance() {
     }));
   };
 
-  const submitAttendance = async () => {
+  const validateAndSubmit = () => {
     if (!classId || !date) {
       alert("Please select class and date");
       return;
@@ -57,9 +59,21 @@ function TeacherAttendance() {
     // Validation: Check if all students are marked
     const unmarked = students.filter(s => !attendance[s._id]);
     if (unmarked.length > 0) {
-      if (!window.confirm(`⚠️ You haven't marked attendance for ${unmarked.length} students. They will be ignored. Continue?`)) return;
+      setModal({
+        isOpen: true,
+        title: "Incomplete Attendance",
+        message: `⚠️ You haven't marked attendance for ${unmarked.length} students. They will be ignored (treated as Absent/No Data). Do you want to continue?`,
+        confirmText: "Submit Anyway",
+        isDanger: true,
+        onConfirm: submitAttendance
+      });
+      return;
     }
 
+    submitAttendance();
+  };
+
+  const submitAttendance = async () => {
     try {
       setLoading(true);
       const promises = Object.keys(attendance).map(studentId =>
@@ -89,6 +103,16 @@ function TeacherAttendance() {
 
   return (
     <div className="animate-fadeIn max-w-6xl mx-auto">
+      <ConfirmationModal
+        isOpen={modal.isOpen}
+        onClose={() => setModal({ ...modal, isOpen: false })}
+        onConfirm={modal.onConfirm}
+        title={modal.title}
+        message={modal.message}
+        confirmText={modal.confirmText}
+        isDanger={modal.isDanger}
+      />
+
       <div className="flex items-center gap-3 mb-8">
         <div className="bg-slate-900 p-3 rounded-2xl text-white shadow-lg">
           <FaCalendarAlt size={24} />
@@ -184,7 +208,7 @@ function TeacherAttendance() {
 
           <div className="p-6 bg-slate-50 border-t border-slate-200 flex justify-end">
             <button
-              onClick={submitAttendance}
+              onClick={validateAndSubmit}
               disabled={loading}
               className="bg-slate-900 hover:bg-black text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all active:scale-95 flex items-center gap-2"
             >

@@ -25,6 +25,11 @@ const studentFeeSchema = new mongoose.Schema(
       default: 0,
     },
 
+    breakdown: [{
+      name: { type: String, required: true },
+      amount: { type: Number, required: true }
+    }],
+
     status: {
       type: String,
       enum: ["PAID", "PENDING"],

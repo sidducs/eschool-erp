@@ -23,6 +23,8 @@ const getAllUsers = async (req, res) => {
 
 const { generateSRN } = require("../utils/srnGenerator");
 
+const { logAction } = require("./securityController");
+
 // CREATE user
 const createUser = async (req, res) => {
   try {
@@ -61,6 +63,8 @@ const createUser = async (req, res) => {
       admissionId, classId, section, rollNumber
     });
 
+    await logAction(req.user._id, "CREATE_USER", `Created user ${name} (${role})`, req.ip);
+
     res.status(201).json({
       _id: user._id,
       name: user.name,
@@ -90,11 +94,14 @@ const deleteUser = async (req, res) => {
     }
 
     await user.deleteOne();
+    await logAction(req.user._id, "DELETE_USER", `Deleted user ${user.name}`, req.ip);
+
     res.json({ message: "User deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
 const updateUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -107,16 +114,17 @@ const updateUser = async (req, res) => {
     user.classId = req.body.classId || user.classId;
     user.section = req.body.section || user.section;
     user.rollNumber = req.body.rollNumber || user.rollNumber;
+    user.name = req.body.name || user.name;
+    user.email = req.body.email || user.email;
 
     await user.save();
+    await logAction(req.user._id, "UPDATE_USER", `Updated user ${user.name}`, req.ip);
 
     res.json({ message: "User updated successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
-
-
 
 // APPROVE Student (Hybrid Flow)
 const approveStudent = async (req, res) => {
@@ -136,6 +144,7 @@ const approveStudent = async (req, res) => {
     user.status = "active";
 
     await user.save();
+    await logAction(req.user._id, "APPROVE_STUDENT", `Approved student ${user.name}, assigned SRN: ${admissionId}`, req.ip);
 
     res.json({ message: "Student Approved", student: user });
   } catch (error) {
@@ -151,6 +160,7 @@ const resetPassword = async (req, res) => {
 
     user.password = req.body.password; // Will be hashed
     await user.save();
+    await logAction(req.user._id, "RESET_PASSWORD", `Reset password for ${user.name}`, req.ip);
 
     res.json({ message: `Password reset successfully for ${user.name}` });
   } catch (error) {

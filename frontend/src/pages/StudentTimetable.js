@@ -3,7 +3,7 @@ import api from "../services/api";
 import { AuthContext } from "../context/AuthContext";
 import { FaClock, FaCalendarAlt, FaUserTie } from "react-icons/fa";
 
-function StudentTimetable() {
+function StudentTimetable({ classId }) {
     const { user } = useContext(AuthContext);
     const [timetable, setTimetable] = useState([]);
     const [error, setError] = useState("");
@@ -13,11 +13,14 @@ function StudentTimetable() {
     useEffect(() => {
         const load = async () => {
             try {
-                if (!user?.classId) {
+                // Determine which ID to use: Prop (from Parent View) or Context (Student View)
+                const targetClassId = classId || (user?.classId?._id || user?.classId);
+
+                if (!targetClassId) {
                     setError("Class not assigned");
                     return;
                 }
-                const res = await api.get(`/api/timetable/class/${user.classId}`);
+                const res = await api.get(`/api/timetable/class/${targetClassId}`);
                 setTimetable(res.data || []);
             } catch (err) {
                 setError("Failed to load timetable");
@@ -26,7 +29,7 @@ function StudentTimetable() {
             }
         };
         load();
-    }, [user]);
+    }, [user, classId]);
 
     const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -60,7 +63,7 @@ function StudentTimetable() {
             <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
                     <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                        <FaCalendarAlt className="text-purple-600" /> My Class Timetable
+                        <FaCalendarAlt className="text-purple-600" />  Class Timetable
                     </h2>
                 </div>
                 <div className="flex items-center gap-2">

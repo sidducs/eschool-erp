@@ -10,5 +10,4 @@ const transactionSchema = new mongoose.Schema({
   status: { type: String, enum: ['Issued', 'Returned'], default: 'Issued' }
 }, { timestamps: true });
 
-// ✅ MAKE SURE THIS LINE IS PRESENT
 module.exports = mongoose.model("Transaction", transactionSchema);
