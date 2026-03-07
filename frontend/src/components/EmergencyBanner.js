@@ -9,7 +9,7 @@ const EmergencyBanner = () => {
     useEffect(() => {
         const fetchAlerts = async () => {
             try {
-                const { data } = await api.get('/api/notices');
+                const { data } = await api.get('/api/notices/public');
                 // Find active emergency notice
                 const emergency = data.find(n => n.isEmergency && (!n.expiresAt || new Date(n.expiresAt) > new Date()));
                 if (emergency) {

@@ -40,3 +40,13 @@ exports.deleteNotice = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+// Get Public Notices (for pre-login Emergency Banner)
+exports.getPublicNotices = async (req, res) => {
+  try {
+    const notices = await Notice.find({ audience: "all" }).sort({ date: -1 });
+    res.json(notices);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
