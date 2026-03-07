@@ -12,15 +12,21 @@ const storage = new CloudinaryStorage({
         const imageTypes = ["jpg", "jpeg", "png", "webp"];
         const isImage = imageTypes.includes(fileExt);
 
-        const public_id = file.originalname
+        let public_id = file.originalname
             .split(".")[0]
             .replace(/[^a-zA-Z0-9]/g, "_") +
             "_" +
             Date.now();
 
+        // 🚨 CRITICAL: For raw files (PDF/DOCX), we MUST manually append the extension to public_id
+        // and use resource_type: "raw" to ensure they are publicly readable.
+        if (!isImage) {
+            public_id += "." + fileExt;
+        }
+
         return {
             folder: "eschool_erp",
-            resource_type: "auto", 
+            resource_type: isImage ? "image" : "raw",
             public_id: public_id,
         };
     },
