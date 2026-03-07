@@ -30,18 +30,22 @@ cron.schedule("0 0 * * *", async () => {
   });
 });
 // Middleware
+const rawOrigin = process.env.FRONTEND_URL || "";
+const cleanOrigin = rawOrigin.endsWith("/") ? rawOrigin.slice(0, -1) : rawOrigin;
+
 const allowedOrigins = [
   "http://localhost:3000",
-  process.env.FRONTEND_URL
+  cleanOrigin
 ].filter(Boolean);
 
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      console.warn(`Blocked CORS request from origin: ${origin}`);
+      return callback(null, false); // Return false instead of throwing an Error to avoid 500s
     }
+    return callback(null, true);
   },
   credentials: true,
 }));
