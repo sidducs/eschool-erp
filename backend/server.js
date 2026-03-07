@@ -33,18 +33,8 @@ cron.schedule("0 0 * * *", async () => {
 const rawOrigin = process.env.FRONTEND_URL || "";
 
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    // Check if the origin includes 'localhost' or the core frontend domain
-    if (origin.includes('localhost') || origin.includes('vercel.app') || (rawOrigin && origin.includes(rawOrigin.replace('https://', '').replace('http://', '').replace('/', '')))) {
-      return callback(null, true);
-    }
-
-    console.warn(`Blocked CORS request from origin: ${origin}`);
-    return callback(null, false);
-  },
+app.use(cors({
+  origin: true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
