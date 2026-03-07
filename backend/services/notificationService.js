@@ -22,17 +22,22 @@ const sendEmail = async (to, subject, text) => {
         }
 
         // ✅ Real Email Sending Enabled
-        await transporter.sendMail({ 
+        console.log(`[Email Attempt] To: ${to} | Subject: ${subject}`);
+        
+        const info = await transporter.sendMail({ 
             from: `"ESchool ERP" <${process.env.EMAIL_USER}>`, 
             to, 
             subject, 
             text 
         });
 
-        console.log(`[Email Sent] To: ${to} | Subject: ${subject}`);
+        console.log(`[Email Success] MessageId: ${info.messageId} | Recipient: ${to}`);
         return true;
     } catch (error) {
-        console.error("Email Error:", error);
+        console.error("[Email Terminal Failure]:", error.message);
+        if (error.code === 'EAUTH') {
+            console.error("DEBUG: Check if EMAIL_PASS is a 16-character App Password.");
+        }
         return false;
     }
 };

@@ -20,7 +20,11 @@ function StudentAssignments() {
     const fetchData = useCallback(async () => {
         try {
             const classId = user.classId?._id || user.classId;
-            if (!classId) return;
+            if (!classId) {
+                console.warn("Student has no classId assigned.");
+                setLoading(false);
+                return;
+            }
 
             const [assignRes, subRes] = await Promise.all([
                 api.get(`/api/assignments/class/${classId}`),
@@ -31,10 +35,11 @@ function StudentAssignments() {
             setSubmissions(subRes.data);
         } catch (err) {
             console.error("Failed to fetch data", err);
+            addToast("Failed to connect to assignment server", "error");
         } finally {
             setLoading(false);
         }
-    }, [user]);
+    }, [user, addToast]);
 
     useEffect(() => {
         if (user) {
@@ -133,7 +138,12 @@ function StudentAssignments() {
                 <FaFileAlt className="text-indigo-600" /> Class Assignments
             </h1>
 
-            {assignments.length === 0 ? (
+            {!user.classId ? (
+                <div className="bg-amber-50 p-10 rounded-2xl border border-amber-200 text-center">
+                    <h3 className="text-lg font-bold text-amber-800">No Class Assigned</h3>
+                    <p className="text-amber-700">Please contact the administrator to assign you to a class to view assignments.</p>
+                </div>
+            ) : assignments.length === 0 ? (
                 <div className="bg-white p-10 rounded-2xl shadow-sm text-center">
                     <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
                         <FaFileAlt size={24} />
