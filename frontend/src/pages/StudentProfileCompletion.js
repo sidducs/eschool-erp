@@ -37,7 +37,6 @@ function StudentProfileCompletion() {
         try {
             const data = new FormData();
             Object.keys(formData).forEach(key => data.append(key, formData[key]));
-            Object.entries(errors).forEach(([_, msg]) => {});
             if (profilePic) {
 
                 data.append("profilePicture", profilePic);
