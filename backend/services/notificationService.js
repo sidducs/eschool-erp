@@ -21,20 +21,15 @@ const sendEmail = async (to, subject, text) => {
             return false;
         }
 
-        // SAFETY: Commented out to prevent accidental emails to random users during testing.
-        // To enable real emails, uncomment the lines below and ensure .env has valid credentials.
-
-        /* 
+        // ✅ Real Email Sending Enabled
         await transporter.sendMail({ 
             from: `"ESchool ERP" <${process.env.EMAIL_USER}>`, 
             to, 
             subject, 
             text 
         });
-        */
 
-        console.log(`[EMAIL LOG ONLY] To: ${to} | Subject: ${subject}`);
-        console.log(`[CONTENT] ${text}`); // Log content for verification
+        console.log(`[Email Sent] To: ${to} | Subject: ${subject}`);
         return true;
     } catch (error) {
         console.error("Email Error:", error);
