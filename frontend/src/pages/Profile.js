@@ -3,7 +3,7 @@ import { AuthContext } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import api from "../services/api";
 import Loader from "../components/Loader";
-import { FaUser, FaLock, FaSave, FaCamera, FaEnvelope, FaPhone, FaMapMarkerAlt, FaEdit, FaTimes, FaIdCard, FaGraduationCap } from "react-icons/fa";
+import { FaUser, FaLock, FaSave, FaCamera, FaEnvelope, FaPhone, FaMapMarkerAlt, FaEdit, FaTimes } from "react-icons/fa";
 
 function Profile() {
     const { user } = useContext(AuthContext);

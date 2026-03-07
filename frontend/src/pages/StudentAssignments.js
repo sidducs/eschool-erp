@@ -2,7 +2,7 @@ import { useState, useEffect, useContext, useCallback } from "react";
 import api from "../services/api";
 import { AuthContext } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
-import { FaDownload, FaCalendarAlt, FaFileAlt, FaFileUpload, FaCheckCircle } from "react-icons/fa";
+import { FaCalendarAlt, FaFileAlt, FaFileUpload, FaCheckCircle } from "react-icons/fa";
 import Loader from "../components/Loader";
 
 function StudentAssignments() {

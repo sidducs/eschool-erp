@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
 import { useToast } from "../context/ToastContext";
-import { FaSearch, FaMoneyBillWave, FaCheckCircle, FaSpinner } from "react-icons/fa";
+import { FaSearch, FaMoneyBillWave, FaSpinner } from "react-icons/fa";
 
 function FeeManager() {
     const { addToast } = useToast();
@@ -10,15 +10,11 @@ function FeeManager() {
     const [searchTerm, setSearchTerm] = useState("");
     const [processingId, setProcessingId] = useState(null);
 
-    // Payment Form
-    const [paymentData, setPaymentData] = useState({
-        studentId: "",
-        amount: ""
-    });
+    // Payment Form (Unused)
 
     useEffect(() => {
         fetchFees();
-    }, []);
+    }, []); // eslint-disable-next-line react-hooks/exhaustive-deps
 
     const fetchFees = async () => {
         try {

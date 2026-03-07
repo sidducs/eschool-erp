@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from "react";
 import api from "../services/api";
 import { AuthContext } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
-import { FaPlus, FaComments, FaUserCircle } from "react-icons/fa";
+import { FaPlus, FaComments } from "react-icons/fa";
 import Loader from "../components/Loader";
 
 function DoubtForum() {

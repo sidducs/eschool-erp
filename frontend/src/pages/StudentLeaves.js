@@ -1,6 +1,5 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect } from "react";
 import api from "../services/api";
-import { AuthContext } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { FaCalendarAlt, FaPlus, FaHistory, FaCheckCircle, FaTimesCircle, FaClock } from "react-icons/fa";
 import Loader from "../components/Loader";
@@ -21,7 +20,7 @@ function StudentLeaves() {
 
     useEffect(() => {
         fetchMyLeaves();
-    }, []);
+    }, []); // eslint-disable-next-line react-hooks/exhaustive-deps
 
     const fetchMyLeaves = async () => {
         try {

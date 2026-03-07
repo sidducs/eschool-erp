@@ -1,4 +1,4 @@
-import { useRef, useContext, useState } from "react";
+import { useContext, useState } from "react";
 import { jsPDF } from "jspdf";
 import { AuthContext } from "../context/AuthContext";
 import { FaCertificate, FaDownload } from "react-icons/fa";
