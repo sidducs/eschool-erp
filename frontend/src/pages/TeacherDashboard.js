@@ -280,6 +280,7 @@ function TeacherDashboard() {
                                     <FaBullhorn className="mt-1 mr-3 text-blue-500 flex-shrink-0" />
                                     <div>
                                        <strong className="block text-slate-800 text-sm mb-1">{n.title}</strong>
+                                                <p className="text-xs text-slate-500 mt-1">{new Date(n.date || n.createdAt || Date.now()).toLocaleDateString()}</p>
                                        <p className="text-slate-600 text-sm">{n.content}</p>
                                     </div>
                                  </div>

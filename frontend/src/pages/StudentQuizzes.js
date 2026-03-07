@@ -1,8 +1,7 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect } from "react";
 import api from "../services/api";
 
-import { AuthContext } from "../context/AuthContext";
-import { FaTimesCircle, FaPlay, FaHistory, FaTrophy, FaTrash } from "react-icons/fa";
+import { FaTimesCircle, FaHistory, FaTrophy, FaPlay, FaTrash } from "react-icons/fa";
 import Loader from "../components/Loader";
 import ConfirmationModal from "../components/ConfirmationModal";
 

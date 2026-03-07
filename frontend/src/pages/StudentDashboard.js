@@ -226,7 +226,7 @@ function StudentDashboard() {
                       <div key={i} className="group relative pl-4 border-l-2 border-white/20 hover:border-orange-500 transition-colors">
                         <div className="mb-1 flex items-center gap-2">
                           <span className="text-[10px] uppercase tracking-wider font-bold text-orange-400">
-                            {new Date(n.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                            {new Date(n.date || n.createdAt || Date.now()).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                           </span>
                           <h5 className="font-bold text-white text-sm truncate">{n.title}</h5>
                         </div>

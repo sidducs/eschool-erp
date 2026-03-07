@@ -686,7 +686,7 @@ function AdminDashboard() {
                           )}
                           <button
                             className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded"
-                            onClick={() => window.open(`http://localhost:5000/api/fees/receipt/${f.studentId?._id}`, '_blank')}
+                            onClick={() => window.open(`/receipt/${f._id}`, '_blank')}
                             title="Download PDF Receipt"
                           >
                             <FaPrint />

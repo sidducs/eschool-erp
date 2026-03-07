@@ -2,7 +2,7 @@ import { useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import api from "../services/api";
-import { FaFileUpload, FaSave, FaCheckCircle, FaExclamationTriangle, FaSignOutAlt } from "react-icons/fa";
+import { FaSave, FaCheckCircle, FaExclamationTriangle, FaFileUpload, FaSignOutAlt } from "react-icons/fa";
 
 function StudentProfileCompletion() {
     const { user, logout } = useContext(AuthContext); // Added logout

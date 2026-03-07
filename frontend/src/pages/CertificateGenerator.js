@@ -1,12 +1,12 @@
 import { useRef, useContext, useState } from "react";
 import { jsPDF } from "jspdf";
 import { AuthContext } from "../context/AuthContext";
-import { FaCertificate, FaDownload, FaPrint } from "react-icons/fa";
+import { FaCertificate, FaDownload } from "react-icons/fa";
 
 function CertificateGenerator() {
     const { user } = useContext(AuthContext);
     const [generating, setGenerating] = useState(false);
-    const canvasRef = useRef(null);
+    // const canvasRef = useRef(null);
 
     const generatePDF = () => {
         setGenerating(true);

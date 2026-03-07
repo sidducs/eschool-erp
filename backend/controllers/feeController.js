@@ -149,14 +149,22 @@ ESchool Admin
 // Update payment status
 const updatePayment = async (req, res) => {
   try {
-    const { studentId, paidAmount } = req.body;
+    const { feeId, studentId, paidAmount, amount } = req.body;
+    
+    // Support interchangeably passing "amount" or "paidAmount"
+    const parsedAmount = Number(paidAmount) || Number(amount);
 
-    console.log("updatePayment: Received request for studentId:", studentId);
+    console.log("updatePayment: Received request | feeId:", feeId, "| studentId:", studentId, "| amount:", parsedAmount);
 
-    const fee = await StudentFee.findOne({ studentId });
+    let fee;
+    if (feeId) {
+       fee = await StudentFee.findById(feeId);
+    } else if (studentId) {
+       fee = await StudentFee.findOne({ studentId });
+    }
 
     if (!fee) {
-      console.log("updatePayment: Fee Record NOT FOUND for studentId:", studentId);
+      console.log("updatePayment: Fee Record NOT FOUND for given IDs.");
       return res.status(404).json({ message: "Fee record not found" });
     }
 

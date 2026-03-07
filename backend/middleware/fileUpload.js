@@ -2,42 +2,48 @@ const multer = require("multer");
 const cloudinary = require("../config/cloudinary");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
-// Configure Cloudinary Storage
+// Cloudinary Storage
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: async (req, file) => {
-        const fileExt = file.originalname.split('.').pop().toLowerCase();
-        const isImage = ['jpg', 'jpeg', 'png', 'webp'].includes(fileExt);
-        const isPdf = fileExt === 'pdf';
 
-        if (isImage || isPdf) {
-            return {
-                folder: "eschool_erp",
-                resource_type: "image",
-                format: isPdf ? 'pdf' : undefined,
-                public_id: file.originalname.split('.')[0].replace(/[^a-zA-Z0-9]/g, "_") + "_" + Date.now(),
-                allowed_formats: ["jpg", "jpeg", "png", "webp", "pdf"],
-            };
-        } else {
-            return {
-                folder: "eschool_erp",
-                resource_type: "raw",
-                public_id: file.originalname.split('.')[0].replace(/[^a-zA-Z0-9]/g, "_") + "_" + Date.now() + "." + fileExt,
-            };
-        }
+        const fileExt = file.originalname.split(".").pop().toLowerCase();
+
+        const imageTypes = ["jpg", "jpeg", "png", "webp"];
+        const isImage = imageTypes.includes(fileExt);
+
+        return {
+            folder: "eschool_erp",
+            resource_type: isImage ? "image" : "raw",
+            public_id:
+                file.originalname
+                    .split(".")[0]
+                    .replace(/[^a-zA-Z0-9]/g, "_") +
+                "_" +
+                Date.now(),
+        };
     },
 });
 
-// File Filter for Validation
+// File validation
 const fileFilter = (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|webp|pdf|doc|docx|ppt|pptx|xls|xlsx|txt/;
-    const extname = allowedTypes.test(file.originalname.toLowerCase().split('.').pop());
 
-    if (extname) {
+    const allowedTypes = [
+        "jpeg", "jpg", "png", "webp",
+        "pdf", "doc", "docx",
+        "ppt", "pptx",
+        "xls", "xlsx",
+        "txt"
+    ];
+
+    const fileExt = file.originalname.split(".").pop().toLowerCase();
+
+    if (allowedTypes.includes(fileExt)) {
         cb(null, true);
     } else {
-        cb(new Error("Unsupported file format!"), false);
+        cb(new Error("Unsupported file format"), false);
     }
+
 };
 
 const fileUpload = multer({
