@@ -31,18 +31,23 @@ cron.schedule("0 0 * * *", async () => {
 });
 // Middleware
 const rawOrigin = process.env.FRONTEND_URL || "";
-const cleanOrigin = rawOrigin.endsWith("/") ? rawOrigin.slice(0, -1) : rawOrigin;
-
-const allowedOrigins = [
-  "http://localhost:3000",
-  cleanOrigin
-].filter(Boolean);
 
 app.use(cors({
-  origin: allowedOrigins,
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Check if the origin includes 'localhost' or the core frontend domain
+    if (origin.includes('localhost') || origin.includes('vercel.app') || (rawOrigin && origin.includes(rawOrigin.replace('https://', '').replace('http://', '').replace('/', '')))) {
+      return callback(null, true);
+    }
+
+    console.warn(`Blocked CORS request from origin: ${origin}`);
+    return callback(null, false);
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
   optionsSuccessStatus: 200
 }));
 app.use(express.json());
