@@ -15,9 +15,12 @@ const createAssignment = async (req, res) => {
         let fileType = null;
 
         if (req.file) {
-            // console.log("Uploaded File Debug:", req.file);
             attachment = req.file.path; // Cloudinary URL
-            fileType = req.file.mimetype.split('/')[1]; // e.g., 'pdf', 'jpeg'
+            // Robust file type detection
+            fileType = req.file.mimetype ? req.file.mimetype.split('/')[1] : fileExt;
+            if (!fileType && attachment.includes('.')) {
+                fileType = attachment.split('.').pop();
+            }
         }
 
         const assignment = await Assignment.create({
@@ -42,6 +45,9 @@ const createAssignment = async (req, res) => {
 // @access  Student/Teacher
 const getClassAssignments = async (req, res) => {
     try {
+        if (!req.params.classId || req.params.classId === "undefined") {
+            return res.status(400).json({ message: "Invalid Class ID" });
+        }
         const assignments = await Assignment.find({ classId: req.params.classId })
             .populate("teacherId", "name")
             .sort({ dueDate: 1 }); // Sort by nearest due date

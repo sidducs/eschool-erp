@@ -12,19 +12,15 @@ const storage = new CloudinaryStorage({
         const imageTypes = ["jpg", "jpeg", "png", "webp"];
         const isImage = imageTypes.includes(fileExt);
 
-        let public_id = file.originalname
+        const public_id = file.originalname
             .split(".")[0]
             .replace(/[^a-zA-Z0-9]/g, "_") +
             "_" +
             Date.now();
 
-        if (!isImage) {
-            public_id += "." + fileExt; // Essential for raw files to retain extension
-        }
-
         return {
             folder: "eschool_erp",
-            resource_type: isImage ? "image" : "raw",
+            resource_type: "auto", 
             public_id: public_id,
         };
     },

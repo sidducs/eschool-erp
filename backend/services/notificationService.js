@@ -2,11 +2,13 @@ const nodemailer = require("nodemailer");
 
 // Configure Transporter with Real Credentials
 const transporter = nodemailer.createTransport({
-    service: "gmail", // Using Gmail service wrapper for simplicity
+    service: "gmail",
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
     },
+    connectionTimeout: 10000, // 10 seconds
+    greetingTimeout: 10000,
 });
 
 const sendEmail = async (to, subject, text) => {
