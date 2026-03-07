@@ -23,24 +23,28 @@ const sendEmail = async (to, subject, text) => {
             return false;
         }
 
-        // ✅ Real Email Sending Enabled
+        // ✅ Real Email Sending with 10s Timeout
         console.log(`[Email Attempt] To: ${to} | Subject: ${subject}`);
         
-        const info = await transporter.sendMail({ 
+        const emailPromise = transporter.sendMail({ 
             from: `"ESchool ERP" <${process.env.EMAIL_USER}>`, 
             to, 
             subject, 
             text 
         });
 
+        // Timeout promise
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error("Email timeout after 10s")), 10000)
+        );
+
+        const info = await Promise.race([emailPromise, timeoutPromise]);
+
         console.log(`[Email Success] MessageId: ${info.messageId} | Recipient: ${to}`);
         return true;
     } catch (error) {
-        console.error("[Email Terminal Failure]:", error.message);
-        if (error.code === 'EAUTH') {
-            console.error("DEBUG: Check if EMAIL_PASS is a 16-character App Password.");
-        }
-        return false;
+        console.error("[Email Failure]:", error.message);
+        return false; // Return false so the rest of the request can complete
     }
 };
 

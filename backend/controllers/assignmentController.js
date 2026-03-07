@@ -16,11 +16,11 @@ const createAssignment = async (req, res) => {
 
         if (req.file) {
             attachment = req.file.path; // Cloudinary URL
-            // Robust file type detection
+            const fileExt = req.file.originalname.split('.').pop().toLowerCase();
             fileType = req.file.mimetype ? req.file.mimetype.split('/')[1] : fileExt;
-            if (!fileType && attachment.includes('.')) {
-                fileType = attachment.split('.').pop();
-            }
+            
+            // Final fallback
+            if (!fileType) fileType = fileExt || 'bin';
         }
 
         const assignment = await Assignment.create({
