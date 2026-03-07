@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import api from "../services/api";
 import { useToast } from "../context/ToastContext";
 import { FaCalendarAlt, FaPlus, FaHistory, FaCheckCircle, FaTimesCircle, FaClock } from "react-icons/fa";
@@ -18,11 +18,7 @@ function StudentLeaves() {
         reason: ""
     });
 
-    useEffect(() => {
-        fetchMyLeaves();
-    }, []); // eslint-disable-next-line react-hooks/exhaustive-deps
-
-    const fetchMyLeaves = async () => {
+    const fetchMyLeaves = useCallback(async () => {
         try {
             const res = await api.get("/api/leaves/my-leaves");
             setLeaves(res.data);
@@ -31,7 +27,11 @@ function StudentLeaves() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [addToast]);
+
+    useEffect(() => {
+        fetchMyLeaves();
+    }, [fetchMyLeaves]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });

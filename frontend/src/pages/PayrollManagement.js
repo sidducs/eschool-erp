@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import api from "../services/api";
 import { useToast } from "../context/ToastContext";
 import { FaUserTie, FaMoneyCheckAlt, FaCheckCircle, FaSpinner } from "react-icons/fa";
@@ -17,14 +17,10 @@ function PayrollManagement() {
         remarks: ""
     });
 
-    useEffect(() => {
-        fetchData();
-    }, []); // eslint-disable-next-line react-hooks/exhaustive-deps
-
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             const [staffRes, payrollRes] = await Promise.all([
-                api.get("/api/users/teachers"), // Reusing teacher list, might need custom endpoint for all staff
+                api.get("/api/users/teachers"),
                 api.get("/api/finance/payroll")
             ]);
             setStaff(staffRes.data);
@@ -34,7 +30,11 @@ function PayrollManagement() {
             addToast("Failed to load payroll data", "error");
             setLoading(false);
         }
-    };
+    }, [addToast]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();

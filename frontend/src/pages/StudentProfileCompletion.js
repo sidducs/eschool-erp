@@ -45,9 +45,6 @@ function StudentProfileCompletion() {
             }
 
             // Debug FormData
-            for (let pair of data.entries()) {
-
-            }
 
             // 1. Update Profile
             await api.put("/api/auth/profile", data);

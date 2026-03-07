@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import api from "../services/api";
 import Loader from "../components/Loader";
 import { useToast } from "../context/ToastContext";
@@ -14,7 +14,7 @@ function AdminLeaves() {
         fetchLeaves();
     }, []); // eslint-disable-next-line react-hooks/exhaustive-deps
 
-    const fetchLeaves = async () => {
+    const fetchLeaves = useCallback(async () => {
         try {
             const res = await api.get("/api/leaves/all");
             setLeaves(res.data);
@@ -23,7 +23,7 @@ function AdminLeaves() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [addToast]);
 
     const handleStatusUpdate = async (id, status) => {
         setActionLoading(id);

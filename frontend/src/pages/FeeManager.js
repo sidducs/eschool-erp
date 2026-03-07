@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import api from "../services/api";
 import { useToast } from "../context/ToastContext";
 import { FaSearch, FaMoneyBillWave, FaSpinner } from "react-icons/fa";
@@ -10,13 +10,7 @@ function FeeManager() {
     const [searchTerm, setSearchTerm] = useState("");
     const [processingId, setProcessingId] = useState(null);
 
-    // Payment Form (Unused)
-
-    useEffect(() => {
-        fetchFees();
-    }, []); // eslint-disable-next-line react-hooks/exhaustive-deps
-
-    const fetchFees = async () => {
+    const fetchFees = useCallback(async () => {
         try {
             const res = await api.get("/api/fees/student-fees");
             setStudents(res.data);
@@ -25,7 +19,11 @@ function FeeManager() {
             addToast("Failed to load fee records", "error");
             setLoading(false);
         }
-    };
+    }, [addToast]);
+
+    useEffect(() => {
+        fetchFees();
+    }, [fetchFees]);
 
     const handlePayment = async (studentId, currentPaid) => {
         const amount = prompt("Enter amount to pay:", "0");
