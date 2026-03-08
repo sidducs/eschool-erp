@@ -107,6 +107,13 @@ const sendMessage = async (req, res) => {
         // Populate sender info to return to frontend immediately
         await newMessage.populate("sender", "name email");
 
+        // ✅ Real-time Emit via Socket.io
+        const io = req.app.get("socketio");
+        if (io) {
+            io.to(receiverId).emit("new_message", newMessage);
+            console.log(`Socket: Emitted new_message to room ${receiverId}`);
+        }
+
         res.status(201).json(newMessage);
     } catch (error) {
         res.status(500).json({ message: error.message });

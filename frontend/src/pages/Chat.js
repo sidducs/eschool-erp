@@ -1,8 +1,11 @@
-import { useState, useEffect, useContext, useRef } from "react";
-import api from "../services/api";
+import React, { useState, useEffect, useRef, useContext } from "react";
+import { io } from "socket.io-client";
 import { AuthContext } from "../context/AuthContext";
-import { FaPaperPlane, FaUserCircle, FaSearch, FaCommentDots } from "react-icons/fa";
-import Loader from "../components/Loader";
+import api from "../services/api";
+import { FaCommentDots, FaSearch, FaUserCircle, FaPaperPlane } from "react-icons/fa";
+
+// Connect to backend socket
+const socket = io(process.env.REACT_APP_API_URL || "http://localhost:5000");
 
 function Chat() {
     const { user } = useContext(AuthContext);
@@ -10,9 +13,29 @@ function Chat() {
     const [selectedUser, setSelectedUser] = useState(null);
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState("");
-    const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState("");
-    const scrollRef = useRef();
+    const [searchQuery, setSearchQuery] = useState("");
+    const messagesEndRef = useRef(null);
+
+    // Join room on mount
+    useEffect(() => {
+        if (user?._id) {
+            socket.emit("join", user._id);
+        }
+    }, [user]);
+
+    // Listen for messages
+    useEffect(() => {
+        socket.on("new_message", (message) => {
+            const senderId = typeof message.sender === 'string' ? message.sender : message.sender._id;
+            const receiverId = typeof message.receiver === 'string' ? message.receiver : message.receiver._id;
+            if (selectedUser && (senderId === selectedUser._id || receiverId === selectedUser._id)) {
+                setMessages((prev) => [...prev, message]);
+            }
+            // Update contacts list last message (optional)
+        });
+
+        return () => socket.off("new_message");
+    }, [selectedUser]);
 
     useEffect(() => {
         fetchContacts();
@@ -21,32 +44,32 @@ function Chat() {
     useEffect(() => {
         if (selectedUser) {
             fetchMessages(selectedUser._id);
-            const interval = setInterval(() => fetchMessages(selectedUser._id), 3000);
-            return () => clearInterval(interval);
         }
     }, [selectedUser]);
 
     useEffect(() => {
-        scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+        scrollToBottom();
     }, [messages]);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
 
     const fetchContacts = async () => {
         try {
             const res = await api.get("/api/chat/contacts/list");
             setContacts(res.data);
-            setLoading(false);
         } catch (err) {
-            console.error("Failed to load contacts");
-            setLoading(false);
+            console.error("Failed to fetch contacts", err);
         }
     };
 
-    const fetchMessages = async (userId) => {
+    const fetchMessages = async (receiverId) => {
         try {
-            const res = await api.get(`/api/chat/${userId}`);
+            const res = await api.get(`/api/chat/${receiverId}`);
             setMessages(res.data);
         } catch (err) {
-            console.error("Failed to load messages");
+            console.error("Failed to fetch messages", err);
         }
     };
 
@@ -55,154 +78,156 @@ function Chat() {
         if (!newMessage.trim() || !selectedUser) return;
 
         try {
-            const payload = { receiverId: selectedUser._id, message: newMessage };
-            const res = await api.post("/api/chat/send", payload);
-            setMessages([...messages, res.data]);
+            await api.post("/api/chat/send", {
+                receiverId: selectedUser._id,
+                message: newMessage
+            });
+            // Socket will broadcast it back to us, but we can also update local state if backend doesn't broadcast to sender
+            // But usually backend broadcasts to the room.
             setNewMessage("");
         } catch (err) {
-            console.error("Failed to send message");
+            console.error("Failed to send message", err);
         }
     };
 
     const filteredContacts = contacts.filter(c =>
-        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (c.admissionId && c.admissionId.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (c.classId?.name && c.classId.name.toLowerCase().includes(searchTerm.toLowerCase()))
+        c.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    if (loading) return <Loader text="Loading Chat..." />;
-
     return (
-        <div className="flex h-[calc(100vh-6rem)] bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            {/* Sidebar / Contact List */}
-            <div className={`w-full md:w-1/3 border-r border-slate-100 flex flex-col ${selectedUser ? 'hidden md:flex' : 'flex'}`}>
-                <div className="p-4 border-b border-slate-100 bg-slate-50">
-                    <h2 className="font-bold text-slate-700 flex items-center gap-2 mb-3">
-                        <FaCommentDots className="text-indigo-600" /> Messages
-                    </h2>
+        <div className="animate-fadeIn flex h-[calc(100vh-180px)] bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
+            {/* Sidebar - Contacts */}
+            <div className="w-full md:w-80 border-r border-slate-100 flex flex-col bg-slate-50/50">
+                <div className="p-4 bg-white border-b border-slate-100">
+                    <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2 mb-4">
+                        <FaCommentDots className="text-blue-600" /> Messages
+                    </h3>
                     <div className="relative">
-                        <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
                         <input
                             type="text"
-                            placeholder="Search contacts..."
-                            className="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder="Search people..."
+                            className="w-full pl-10 pr-4 py-2 bg-slate-100 border-none rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
                 </div>
-                <div className="flex-1 overflow-y-auto">
+
+                <div className="flex-1 overflow-y-auto p-2 space-y-1">
                     {filteredContacts.length === 0 ? (
-                        <p className="p-6 text-center text-slate-400 text-sm">No contacts found.</p>
+                        <div className="p-8 text-center text-slate-400 text-sm">
+                            No contacts found
+                        </div>
                     ) : (
-                        filteredContacts.map(contact => (
-                            <div
+                        filteredContacts.map((contact) => (
+                            <button
                                 key={contact._id}
                                 onClick={() => setSelectedUser(contact)}
-                                className={`p-4 flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition border-b border-slate-50 ${selectedUser?._id === contact._id ? "bg-indigo-50 border-l-4 border-l-indigo-600" : ""}`}
+                                className={`w-full flex items-center gap-3 p-3 rounded-2xl transition-all ${selectedUser?._id === contact._id
+                                        ? "bg-blue-600 text-white shadow-lg shadow-blue-200 translate-x-1"
+                                        : "hover:bg-white hover:shadow-md text-slate-600"
+                                    }`}
                             >
                                 <div className="relative">
-                                    <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-500">
-                                        <FaUserCircle size={24} />
-                                    </div>
-                                    {contact.unreadCount > 0 && (
-                                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white">
-                                            {contact.unreadCount}
-                                        </span>
+                                    {contact.profilePicture ? (
+                                        <img src={contact.profilePicture} alt="" className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm" />
+                                    ) : (
+                                        <FaUserCircle size={48} className={selectedUser?._id === contact._id ? "text-blue-200" : "text-slate-300"} />
                                     )}
+                                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
                                 </div>
-                                <div>
-                                    <div className="flex justify-between w-full">
-                                        <h4 className={`font-bold text-sm ${contact.unreadCount > 0 ? "text-slate-900" : "text-slate-800"}`}>
-                                            {contact.name} ({contact.role})
-                                        </h4>
-                                        {contact.lastMessageTime !== 0 && (
-                                            <span className="text-[10px] text-slate-400">
-                                                {new Date(contact.lastMessageTime).toLocaleDateString() === new Date().toLocaleDateString()
-                                                    ? new Date(contact.lastMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                                                    : new Date(contact.lastMessageTime).toLocaleDateString()}
-                                            </span>
-                                        )}
-                                    </div>
-                                    <div className="flex justify-between items-center w-full">
-                                        <p className={`text-xs truncate max-w-[150px] ${contact.unreadCount > 0 ? "font-bold text-slate-800" : "text-slate-500"}`}>
-                                            {contact.lastMessage || "No messages yet"}
-                                        </p>
-                                        {contact.unreadCount > 0 && (
-                                            <span className="bg-green-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                                                {contact.unreadCount}
-                                            </span>
-                                        )}
-                                    </div>
+                                <div className="text-left flex-1 min-w-0">
+                                    <h4 className="font-bold truncate text-sm">{contact.name}</h4>
+                                    <p className={`text-xs truncate ${selectedUser?._id === contact._id ? "text-blue-100" : "text-slate-400"}`}>
+                                        {contact.role} • {contact.email}
+                                    </p>
                                 </div>
-                            </div>
+                            </button>
                         ))
                     )}
                 </div>
             </div>
 
-            {/* Chat Window */}
-            <div className={`w-full md:w-2/3 flex flex-col ${!selectedUser ? 'hidden md:flex' : 'flex'}`}>
+            {/* Chat Area */}
+            <div className="flex-1 flex flex-col bg-white">
                 {selectedUser ? (
                     <>
-                        <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-white shadow-sm z-10">
-                            <div className="flex items-center gap-3">
-                                <button onClick={() => setSelectedUser(null)} className="md:hidden text-slate-500 mr-2">
-                                    &larr;
-                                </button>
-                                <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold">
-                                    {selectedUser.name.charAt(0)}
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-slate-800">{selectedUser.name}</h4>
-                                    <p className="text-xs text-green-500 flex items-center gap-1">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span> Online
-                                    </p>
-                                </div>
+                        {/* Header */}
+                        <div className="p-4 border-b border-slate-100 flex items-center gap-3 bg-white/80 backdrop-blur-md sticky top-0 z-10">
+                            <div className="relative">
+                                {selectedUser.profilePicture ? (
+                                    <img src={selectedUser.profilePicture} alt="" className="w-10 h-10 rounded-full object-cover" />
+                                ) : (
+                                    <FaUserCircle size={40} className="text-slate-300" />
+                                )}
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-slate-800 leading-tight">{selectedUser.name}</h4>
+                                <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Online</span>
                             </div>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
-                            {messages.map((msg, index) => {
-                                const isMe = msg.sender._id === user._id || msg.sender === user._id; // Handle populated or raw ID
-                                return (
-                                    <div key={index} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                                        <div className={`max-w-[75%] px-4 py-2 rounded-2xl shadow-sm text-sm ${isMe
-                                            ? "bg-indigo-600 text-white rounded-tr-none"
-                                            : "bg-white text-slate-700 rounded-tl-none border border-slate-200"
-                                            }`}>
-                                            <p>{msg.message}</p>
-                                            <p className={`text-[10px] mt-1 text-right ${isMe ? "text-indigo-200" : "text-slate-400"}`}>
-                                                {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </p>
-                                        </div>
+                        {/* Messages List */}
+                        <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50/30">
+                            {messages.length === 0 ? (
+                                <div className="h-full flex flex-col items-center justify-center text-slate-400">
+                                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-3">
+                                        <FaCommentDots size={24} />
                                     </div>
-                                );
-                            })}
-                            <div ref={scrollRef} />
+                                    <p className="text-sm font-medium">No messages yet. Say hello!</p>
+                                </div>
+                            ) : (
+                                messages.map((msg, idx) => {
+                                    const senderId = typeof msg.sender === 'string' ? msg.sender : msg.sender?._id;
+                                    const isMe = senderId === user?._id;
+                                    return (
+                                        <div key={idx} className={`flex ${isMe ? "justify-end" : "justify-start animate-slideInLeft"}`}>
+                                            <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl shadow-sm text-sm ${isMe
+                                                    ? "bg-slate-900 text-white rounded-br-none"
+                                                    : "bg-white text-slate-700 border border-slate-100 rounded-bl-none"
+                                                }`}>
+                                                <p className="leading-relaxed">{msg.message}</p>
+                                                <span className={`text-[10px] mt-1 block h-3 ${isMe ? "text-slate-400" : "text-slate-400"}`}>
+                                                    {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            )}
+                            <div ref={messagesEndRef} />
                         </div>
 
-                        <form onSubmit={handleSendMessage} className="p-4 bg-white border-t border-slate-100 flex gap-2">
-                            <input
-                                type="text"
-                                className="flex-1 px-4 py-2 rounded-full border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"
-                                placeholder="Type a message..."
-                                value={newMessage}
-                                onChange={(e) => setNewMessage(e.target.value)}
-                            />
-                            <button
-                                type="submit"
-                                className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-700 transition shadow-sm"
-                            >
-                                <FaPaperPlane size={14} />
-                            </button>
+                        {/* Input Area */}
+                        <form onSubmit={handleSendMessage} className="p-4 bg-white border-t border-slate-100">
+                            <div className="flex gap-3 bg-slate-50 p-2 rounded-2xl items-center focus-within:ring-2 focus-within:ring-blue-500/20 transition-all border border-slate-200">
+                                <input
+                                    type="text"
+                                    placeholder="Type a message..."
+                                    className="flex-1 bg-transparent border-none outline-none px-3 py-2 text-sm text-slate-700 font-medium"
+                                    value={newMessage}
+                                    onChange={(e) => setNewMessage(e.target.value)}
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={!newMessage.trim()}
+                                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white p-3 rounded-xl shadow-lg shadow-blue-200 transition-all active:scale-90 flex items-center justify-center"
+                                >
+                                    <FaPaperPlane size={16} />
+                                </button>
+                            </div>
                         </form>
                     </>
                 ) : (
-                    <div className="flex-1 flex flex-col items-center justify-center text-slate-300">
-                        <FaCommentDots size={64} className="mb-4 text-slate-200" />
-                        <p className="text-lg font-bold text-slate-400">Select a contact to start chatting</p>
+                    <div className="flex-1 flex flex-col items-center justify-center p-12 text-center bg-slate-50/30">
+                        <div className="w-24 h-24 bg-white rounded-3xl shadow-xl flex items-center justify-center mb-6 text-blue-600 animate-bounce-slow">
+                            <FaCommentDots size={48} />
+                        </div>
+                        <h3 className="text-2xl font-bold text-slate-800 mb-2">Instant Messenger</h3>
+                        <p className="text-slate-500 max-w-xs mx-auto">
+                            Choose a contact from the sidebar to start a real-time conversation.
+                        </p>
                     </div>
                 )}
             </div>

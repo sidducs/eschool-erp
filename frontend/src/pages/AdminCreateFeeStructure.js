@@ -85,7 +85,7 @@ function AdminCreateFeeStructure({ goBack }) {
       )}
 
       <div className="flex items-center gap-3 mb-8">
-        <div className="bg-blue-600 p-3 rounded-test text-white shadow-lg shadow-blue-500/20">
+        <div className="bg-blue-600 p-3 rounded-2xl text-white shadow-lg shadow-blue-500/20">
           <FaMoneyBillWave size={24} />
         </div>
         <div>

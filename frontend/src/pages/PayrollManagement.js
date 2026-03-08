@@ -20,7 +20,7 @@ function PayrollManagement() {
     const fetchData = useCallback(async () => {
         try {
             const [staffRes, payrollRes] = await Promise.all([
-                api.get("/api/users/teachers"),
+                api.get("/api/users/staff"),
                 api.get("/api/finance/payroll")
             ]);
             setStaff(staffRes.data);

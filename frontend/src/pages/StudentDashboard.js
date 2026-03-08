@@ -1,4 +1,5 @@
 import { useState, useContext, useEffect } from "react";
+import { ThemeContext } from "../context/ThemeContext";
 // import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { AuthContext } from "../context/AuthContext";
@@ -17,14 +18,16 @@ import Chat from "../pages/Chat";
 import DoubtForum from "../pages/DoubtForum";
 import CertificateGenerator from "../pages/CertificateGenerator";
 import StudentTransport from "../pages/StudentTransport"; // Added
+import StudentIDCard from "./StudentIDCard";
 
 import {
   FaBars, FaTachometerAlt, FaClipboardCheck, FaBook, FaCalendarAlt,
   FaFilePdf, FaUserGraduate, FaBullhorn,
-  FaBookReader, FaTimes, FaSignOutAlt, FaPrint, FaClipboardList, FaLightbulb, FaBus, FaQuestionCircle, FaCertificate, FaCommentDots
+  FaBookReader, FaTimes, FaSignOutAlt, FaPrint, FaClipboardList, FaLightbulb, FaBus, FaQuestionCircle, FaCertificate, FaCommentDots, FaSun, FaMoon, FaIdCard
 } from "react-icons/fa";
 
 function StudentDashboard() {
+  const { theme, toggleTheme } = useContext(ThemeContext);
   const { user, logout } = useContext(AuthContext);
   // const navigate = useNavigate(); // Unused
 
@@ -117,12 +120,13 @@ function StudentDashboard() {
     { id: "library", label: "Library Hub", icon: FaBookReader },
     { id: "transport", label: "Transport Routes", icon: FaBus },
     { id: "fees", label: "Fee Receipt", icon: FaFilePdf },
+    { id: "idcard", label: "My ID Card", icon: FaIdCard },
   ];
 
   if (loading) return <Loader text="Loading Student Portal..." />;
 
   return (
-    <div className="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden">
+    <div className="flex h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 overflow-hidden">
 
       {/* Mobile Backdrop */}
       {showSidebar && window.innerWidth < 1024 && (
@@ -141,9 +145,18 @@ function StudentDashboard() {
             </div>
             <span className="font-bold text-lg tracking-tight">Student Portal</span>
           </div>
-          <button className="lg:hidden text-slate-400 hover:text-white" onClick={() => setShowSidebar(false)}>
-            <FaTimes size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
+              title="Toggle Theme"
+            >
+              {theme === "dark" ? <FaSun size={16} /> : <FaMoon size={16} />}
+            </button>
+            <button className="lg:hidden text-slate-400 hover:text-white" onClick={() => setShowSidebar(false)}>
+              <FaTimes size={20} />
+            </button>
+          </div>
         </div>
 
         <div className="p-4 space-y-1 overflow-y-auto h-[calc(100vh-4rem)]">
@@ -170,20 +183,20 @@ function StudentDashboard() {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
         {/* Header */}
-        <header className="flex items-center justify-between h-16 px-6 bg-white border-b border-slate-200 shadow-sm z-10">
+            <header className="flex items-center justify-between h-16 px-6 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm z-10">
           <div className="flex items-center">
-            <button onClick={() => setShowSidebar(!showSidebar)} className="mr-4 p-2 rounded-full hover:bg-slate-100 lg:hidden">
-              <FaBars className="text-slate-600" />
+            <button onClick={() => setShowSidebar(!showSidebar)} className="mr-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 lg:hidden">
+              <FaBars className="text-slate-600 dark:text-slate-400" />
             </button>
-            <h2 className="text-xl font-bold text-slate-800 uppercase tracking-wide">
+            <h2 className="text-xl font-bold text-slate-800 dark:text-white uppercase tracking-wide">
               {activeMenu === 'dashboard' ? 'Overview' : activeMenu.replace("-", " ")}
             </h2>
           </div>
 
-          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4">
             <div className="hidden md:flex flex-col items-end">
-              <span className="font-bold text-sm text-slate-800">{user?.name}</span>
-              <span className="text-[10px] uppercase font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">Student</span>
+              <span className="font-bold text-sm text-slate-800 dark:text-white">{user?.name}</span>
+              <span className="text-[10px] uppercase font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">Student</span>
             </div>
             <button
               onClick={logout}
@@ -410,6 +423,7 @@ function StudentDashboard() {
             </div>
           )}
 
+          {activeMenu === "idcard" && <StudentIDCard />}
         </main>
       </div>
     </div>

@@ -19,8 +19,10 @@ const bulkUploadStudents = async (req, res) => {
           email: row.email,
           password: row.password || "student123",
           role: "student",
-          section: row.section,
-          rollNumber: row.rollNumber,
+          status: "active",
+          admissionId: row.admissionId || row.ClassSRN, // Support both headers
+          fatherName: row.fatherName || row.FatherName,
+          phoneNumber: row.phoneNumber || row.Phone,
         });
       })
       .on("end", async () => {

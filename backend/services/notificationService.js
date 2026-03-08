@@ -17,20 +17,26 @@ transporter.verify((error) => {
     }
 });
 
-const sendEmail = async (to, subject, text) => {
+const sendEmail = async (to, subject, text, htmlContent = null) => {
     try {
         if (!to || !to.includes("@")) return false;
 
-        await transporter.sendMail({
+        const mailOptions = {
             from: `"ESchool ERP" <${process.env.EMAIL_USER}>`,
             to,
             subject,
-            text
-        });
+            text,
+        };
+
+        if (htmlContent) {
+            mailOptions.html = htmlContent;
+        }
+
+        await transporter.sendMail(mailOptions);
 
         return true;
     } catch (error) {
-        console.error("Email sending failed");
+        console.error("Email sending failed:", error.message);
         return false;
     }
 };

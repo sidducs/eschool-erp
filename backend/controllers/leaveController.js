@@ -1,5 +1,7 @@
 const Leave = require("../models/Leave");
 const User = require("../models/User");
+const { sendEmail } = require("../services/notificationService");
+const { leaveStatusTemplate } = require("../services/emailTemplates");
 
 
 const applyLeave = async (req, res) => {
@@ -63,6 +65,29 @@ const updateLeaveStatus = async (req, res) => {
         if (adminComment) leave.adminComment = adminComment;
 
         await leave.save();
+
+        // 📧 Send Leave Status Email (Fire and forget)
+        try {
+            (async () => {
+                const settings = await require("../models/SchoolSettings").findOne();
+                const schoolName = settings?.schoolName || "ESchool ERP";
+                const user = await User.findById(leave.user);
+                
+                if (user?.email) {
+                    const startDateStr = new Date(leave.startDate).toLocaleDateString();
+                    const endDateStr = new Date(leave.endDate).toLocaleDateString();
+                    
+                    await sendEmail(
+                        user.email,
+                        `${status}: Your Leave Request - ${schoolName}`,
+                        `Your leave from ${startDateStr} to ${endDateStr} has been ${status}.`,
+                        leaveStatusTemplate(user.name, leave.leaveType, startDateStr, endDateStr, status, adminComment, schoolName)
+                    );
+                }
+            })();
+        } catch (e) {
+            console.error("Leave status email failed:", e.message);
+        }
 
         // 📝 Log Action
         await logAction(req.user._id, "LEAVE_UPDATE", `Updated leave for ${leave.user?.name} to ${status}`, req.ip);

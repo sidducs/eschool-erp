@@ -1,8 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const { protect } = require("../middleware/authMiddleware");
-const { isAdmin } = require("../middleware/adminMiddleware");
+const { protect, authorize } = require("../middleware/authMiddleware");
 
 // Fee controller
 const {
@@ -21,16 +20,16 @@ const {
   generateMyFeeReceipt,
 } = require("../controllers/receiptController");
 
-// ADMIN ROUTES
-router.post("/", protect, isAdmin, createFeeStructure);
-router.get("/", protect, isAdmin, getFeeStructures);
-router.get("/structure/:classId", protect, isAdmin, getFeeStructureByClass);
+// ADMIN & ACCOUNTANT ROUTES
+router.post("/", protect, authorize("admin"), createFeeStructure);
+router.get("/", protect, authorize("admin", "accountant"), getFeeStructures);
+router.get("/structure/:classId", protect, authorize("admin", "accountant"), getFeeStructureByClass);
 
-router.post("/assign", protect, isAdmin, assignFeeToStudent);
+router.post("/assign", protect, authorize("admin"), assignFeeToStudent);
 
-router.get("/student-fees", protect, isAdmin, getAllStudentFees);
+router.get("/student-fees", protect, authorize("admin", "accountant"), getAllStudentFees);
 
-router.put("/pay", protect, isAdmin, updatePayment);
+router.put("/pay", protect, authorize("admin", "accountant"), updatePayment);
 
 // STUDENT ROUTES
 router.get("/my-fee", protect, getMyFee);
@@ -48,7 +47,7 @@ router.get(
 router.get(
   "/receipt/:id",
   protect,
-  isAdmin,
+  authorize("admin"),
   generateFeeReceipt
 );
 

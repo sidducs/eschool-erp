@@ -24,6 +24,20 @@ const getStudentsByClass = async (req, res) => {
   }
 };
 
+// GET ALL STAFF (Admin, Teacher, Accountant)
+const getStaff = async (req, res) => {
+  try {
+    const staff = await User.find({
+      role: { $in: ["admin", "teacher", "accountant"] },
+    }).select("-password");
+
+    res.json(staff);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getStudentsByClass,
+  getStaff,
 };

@@ -6,10 +6,12 @@ const {
     addExpense,
     getExpenses,
     addPayroll,
-    getPayroll
+    getPayroll,
+    getFinancialReports
 } = require("../controllers/financeController");
 
 router.get("/stats", protect, authorize("accountant", "admin"), getFinanceStats);
+router.get("/reports", protect, authorize("accountant", "admin"), getFinancialReports);
 
 router.post("/expenses", protect, authorize("accountant", "admin"), addExpense);
 router.get("/expenses", protect, authorize("accountant", "admin"), getExpenses);

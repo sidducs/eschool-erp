@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
+import { useToast } from "../context/ToastContext";
 
 function AdminCreateExam() {
+  const { addToast } = useToast();
   const [classes, setClasses] = useState([]);
   const [name, setName] = useState("");
   const [classId, setClassId] = useState("");
@@ -29,7 +31,7 @@ function AdminCreateExam() {
         examDate,
       });
 
-      alert("Exam created successfully");
+      addToast("Exam created successfully", "success");
 
       setName("");
       setClassId("");
@@ -37,7 +39,7 @@ function AdminCreateExam() {
       setTotalMarks("");
       setExamDate("");
     } catch (error) {
-      alert("Failed to create exam");
+      addToast("Failed to create exam", "error");
     }
   };
 

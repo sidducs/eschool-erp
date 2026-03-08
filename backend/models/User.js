@@ -89,6 +89,10 @@ const userSchema = new mongoose.Schema(
       stopName: { type: String, default: null },
       transportFee: { type: Number, default: 0 }
     },
+
+    // 🔐 Password Reset Fields
+    resetPasswordToken: { type: String, select: false },
+    resetPasswordExpire: { type: Date, select: false }
   },
   { timestamps: true }
 );

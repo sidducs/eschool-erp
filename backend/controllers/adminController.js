@@ -1,4 +1,7 @@
 const User = require("../models/User");
+const { sendEmail } = require("../services/notificationService");
+const { approvalTemplate, welcomeTemplate } = require("../services/emailTemplates");
+const Settings = require("../models/SchoolSettings");
 // GET all students (for teachers)
 const getAllStudents = async (req, res) => {
   try {
@@ -144,6 +147,29 @@ const approveStudent = async (req, res) => {
     user.status = "active";
 
     await user.save();
+
+    // 📧 Send Approval Email if status changed to active
+    try {
+      (async () => {
+        const settings = await Settings.findOne();
+        const schoolName = settings?.schoolName || "ESchool ERP";
+        
+        // Populate class details
+        const populatedUser = await User.findById(user._id).populate("classId");
+        const className = populatedUser.classId?.name || "N/A";
+        const section = populatedUser.section || "N/A";
+
+        await sendEmail(
+          user.email,
+          "Your Account Has Been Approved",
+          `Congratulations ${user.name}, your account is approved. SRN: ${user.admissionId}`,
+          approvalTemplate(user.name, user.admissionId, className, section, schoolName)
+        );
+      })();
+    } catch (e) {
+      console.error("Approval email failed:", e.message);
+    }
+
     await logAction(req.user._id, "APPROVE_STUDENT", `Approved student ${user.name}, assigned SRN: ${admissionId}`, req.ip);
 
     res.json({ message: "Student Approved", student: user });

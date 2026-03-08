@@ -10,6 +10,10 @@ router.post("/register", authController.registerUser);
 router.post("/login", authController.loginUser);
 router.get("/profile", require("../middleware/authMiddleware").protect, authController.getProfile);
 router.put("/profile", require("../middleware/authMiddleware").protect, fileUpload.single("profilePicture"), authController.updateProfile);
+const { forgotPassword, resetPassword } = require("../controllers/forgotPasswordController");
+router.post("/forgot-password", forgotPassword);
+router.put("/reset-password/:token", resetPassword);
+
 router.put("/change-password", require("../middleware/authMiddleware").protect, authController.changePassword);
 
 module.exports = router;

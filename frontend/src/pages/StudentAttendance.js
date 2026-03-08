@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
+import AttendanceHeatmap from "./AttendanceHeatmap";
 
 function StudentAttendance({ studentId }) {
   const [data, setData] = useState(null);
@@ -51,6 +52,10 @@ function StudentAttendance({ studentId }) {
             </h5>
           </div>
         </div>
+      </div>
+
+      <div className="mb-6">
+        <AttendanceHeatmap attendanceData={data.records} />
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">

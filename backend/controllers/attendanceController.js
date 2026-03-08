@@ -1,5 +1,7 @@
 const Attendance = require("../models/Attendance");
 const User = require("../models/User");
+const { sendEmail } = require("../services/notificationService");
+const { absenceAlertTemplate } = require("../services/emailTemplates");
 
 // Teacher → get all students
 const getStudentsForTeacher = async (req, res) => {
@@ -45,17 +47,26 @@ const markAttendance = async (req, res) => {
       markedBy: req.user._id,
     });
 
-    // 📧 Send Email Notification if Absent
+    // 📧 Send Absence Alert Email if student is marked Absent
     if (status === "Absent") {
-      const sendEmail = require("../utils/emailService");
-      const parentEmail = student.parentEmail || student.email; // Fallback to student email if parent not found
+      try {
+        (async () => {
+          const settings = await require("../models/SchoolSettings").findOne();
+          const schoolName = settings?.schoolName || "ESchool ERP";
+          
+          // Find linked parent
+          const parent = await User.findOne({ role: "parent", children: studentId });
+          const alertEmail = parent?.email || student.email;
 
-      if (parentEmail) {
-        sendEmail(
-          parentEmail,
-          "Absence Alert - ESchool ERP",
-          `Dear Parent/Student,\n\nThis is to inform you that ${student.name} was marked ABSENT today (${date}).\n\nSubject: ${subject || "Daily Attendance"}\n\nPlease contact the school if this is an error.\n\nRegards,\nESchool Administration`
-        );
+          await sendEmail(
+            alertEmail,
+            `Absence Alert - ${student.name}`,
+            `${student.name} was marked absent on ${date}`,
+            absenceAlertTemplate(student.name, date, subject || "Daily Attendance", schoolName)
+          );
+        })();
+      } catch (e) {
+        console.error("Absence alert email failed:", e.message);
       }
     }
 

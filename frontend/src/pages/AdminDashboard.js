@@ -1,13 +1,13 @@
 import { useEffect, useState, useContext } from "react";
-import api from "../services/api";
-import { AuthContext } from "../context/AuthContext";
-import Loader from "../components/Loader";
-import { useToast } from "../context/ToastContext"; // Import Global Toast
-import ConfirmationModal from "../components/ConfirmationModal";
-import { Doughnut, Bar } from "react-chartjs-2";
+import { ThemeContext } from "../context/ThemeContext";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from "chart.js";
-import {
-  FaTachometerAlt, FaUsers, FaMoneyBillWave, FaChalkboardTeacher,
+import { Doughnut, Bar } from "react-chartjs-2";
+import { AuthContext } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
+import api from "../services/api";
+import Loader from "../components/Loader";
+import ConfirmationModal from "../components/ConfirmationModal";
+import { FaSun, FaMoon, FaTachometerAlt, FaUsers, FaMoneyBillWave, FaChalkboardTeacher,
   FaClipboardCheck, FaBook, FaUpload, FaBullhorn,
   FaUserGraduate, FaUserTie, FaBars, FaArrowLeft, FaEdit, FaTrash, FaPaperPlane,
   FaSearch, FaPrint, FaBookReader, FaTimes, FaUserPlus, FaCogs, FaMagic, FaUserCheck, FaLock, FaBus, FaCommentDots, FaCalendarAlt
@@ -23,11 +23,13 @@ import Chat from "./Chat"; // Enabled
 import TransportManager from "./TransportManager";
 import SendNotification from "./SendNotification";
 import AdminAssignFee from "./AdminAssignFee";
+import AdminBulkUpload from "./AdminBulkUpload";
 
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
 function AdminDashboard() {
+  const { theme, toggleTheme } = useContext(ThemeContext);
   const { user, logout } = useContext(AuthContext);
   const { addToast } = useToast(); // Use Global Toast
   const [loading, setLoading] = useState(true);
@@ -144,11 +146,11 @@ function AdminDashboard() {
       warning: "bg-amber-50 text-amber-600"
     };
     return (
-      <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+      <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
         <div className="flex justify-between items-start">
           <div>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{title}</p>
-            <h3 className="text-2xl font-bold text-slate-800">{value || 0}</h3>
+            <h3 className="text-2xl font-bold text-slate-800 dark:text-white">{value || 0}</h3>
           </div>
           <div className={`p-3 rounded-lg ${colors[color] || colors.primary}`}>
             <Icon size={20} />
@@ -179,11 +181,12 @@ function AdminDashboard() {
     { id: "audit", label: "Audit Logs", icon: FaLock },
     { id: "settings", label: "System Settings", icon: FaCogs },
     { id: "backup", label: "System Backup", icon: FaUpload },
+    { id: "bulk", label: "Bulk Student Import", icon: FaUpload },
     { id: "send-notification", label: "Send Alerts", icon: FaPaperPlane },
   ];
 
   return (
-    <div className="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden">
+    <div className="flex h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 overflow-hidden">
 
       {/* Mobile Backdrop */}
       {showSidebar && window.innerWidth < 1024 && (
@@ -202,9 +205,18 @@ function AdminDashboard() {
             </div>
             <span className="font-bold text-lg tracking-tight">ESchool ERP</span>
           </div>
-          <button className="lg:hidden text-slate-400 hover:text-white" onClick={() => setShowSidebar(false)}>
-            <FaTimes size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
+              title="Toggle Theme"
+            >
+              {theme === "dark" ? <FaSun size={16} /> : <FaMoon size={16} />}
+            </button>
+            <button className="lg:hidden text-slate-400 hover:text-white" onClick={() => setShowSidebar(false)}>
+              <FaTimes size={20} />
+            </button>
+          </div>
         </div>
 
         <div className="p-4 space-y-1 overflow-y-auto h-[calc(100vh-4rem)]">
@@ -232,20 +244,20 @@ function AdminDashboard() {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
         {/* Top Header */}
-        <header className="flex items-center justify-between h-16 px-6 bg-white border-b border-slate-200 shadow-sm z-10">
+        <header className="flex items-center justify-between h-16 px-6 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm z-10">
           <div className="flex items-center">
-            <button onClick={() => setShowSidebar(!showSidebar)} className="mr-4 p-2 rounded-full hover:bg-slate-100 lg:hidden">
-              <FaBars className="text-slate-600" />
+            <button onClick={() => setShowSidebar(!showSidebar)} className="mr-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 lg:hidden">
+              <FaBars className="text-slate-600 dark:text-slate-400" />
             </button>
-            <h2 className="text-xl font-bold text-slate-800 uppercase tracking-wide">
+            <h2 className="text-xl font-bold text-slate-800 dark:text-white uppercase tracking-wide">
               {activeMenu.split("-")[0].replace("users", "User Management").replace("classes", "Classes & Sections")}
             </h2>
           </div>
 
           <div className="flex items-center gap-4">
             <div className="hidden md:flex flex-col items-end">
-              <span className="font-bold text-sm text-slate-800">{user?.name || "Administrator"}</span>
-              <span className="text-[10px] uppercase font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">Admin</span>
+              <span className="font-bold text-sm text-slate-800 dark:text-white">{user?.name || "Administrator"}</span>
+              <span className="text-[10px] uppercase font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">Admin</span>
             </div>
             <button
               onClick={logout}
@@ -269,14 +281,14 @@ function AdminDashboard() {
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
-                  <h4 className="font-bold text-slate-700 mb-6">Attendance Overview</h4>
+                <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                  <h4 className="font-bold text-slate-700 dark:text-slate-200 mb-6">Attendance Overview</h4>
                   <div className="h-64 relative">
                     <Doughnut data={chartData.att} options={{ maintainAspectRatio: false, cutout: '70%' }} />
                   </div>
                 </div>
-                <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
-                  <h4 className="font-bold text-slate-700 mb-6">Financial Overview</h4>
+                <div className="lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                  <h4 className="font-bold text-slate-700 dark:text-slate-200 mb-6">Financial Overview</h4>
                   <div className="h-64 relative">
                     <Bar data={chartData.fee} options={{ maintainAspectRatio: false }} />
                   </div>
@@ -988,33 +1000,7 @@ function AdminDashboard() {
           )}
 
           {/* BULK UPLOAD */}
-          {activeMenu === "bulk" && (
-            <div className="flex justify-center items-center h-[60vh] animate-fadeIn">
-              <div className="bg-white p-10 rounded-2xl border border-slate-200 shadow-lg text-center max-w-md w-full">
-                <div className="bg-slate-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <FaUpload size={32} className="text-slate-400" />
-                </div>
-                <h5 className="font-bold text-xl text-slate-800 mb-2">Bulk Student Import</h5>
-                <p className="text-slate-500 text-sm mb-8">Upload a CSV file to add students in bulk.</p>
-
-                <form onSubmit={(e) => { e.preventDefault(); if (!formData.file) return addToast("No File Selected", "warning"); const d = new FormData(); d.append("file", formData.file); apiAction('post', '/api/bulk-upload/students', d, "Data Uploaded", null) }}>
-                  <label className="block w-full cursor-pointer mb-4">
-                    <span className="sr-only">Choose file</span>
-                    <input type="file" className="block w-full text-sm text-slate-500
-                                  file:mr-4 file:py-2 file:px-4
-                                  file:rounded-full file:border-0
-                                  file:text-sm file:font-semibold
-                                  file:bg-blue-50 file:text-blue-700
-                                  hover:file:bg-blue-100
-                                " accept=".csv" onChange={(e) => setFormData({ ...formData, file: e.target.files[0] })} required />
-                  </label>
-                  <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors shadow-md">
-                    Process CSV File
-                  </button>
-                </form>
-              </div>
-            </div>
-          )}
+          {activeMenu === "bulk" && <AdminBulkUpload />}
 
           {/* DYNAMIC FORMS (CREATE/EDIT) */}
           {((activeMenu.includes("-create") && activeMenu !== "fees-create") || activeMenu.includes("-edit") || activeMenu.includes("-assign")) && (

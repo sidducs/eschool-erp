@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import api from "../services/api";
 import { FaCogs, FaSave, FaEye } from "react-icons/fa";
+import { useToast } from "../context/ToastContext";
 
 function AdminSettings() {
+    const { addToast } = useToast();
     const [loading, setLoading] = useState(false);
     const [settings, setSettings] = useState({
         srnPrefix: "",
@@ -37,15 +39,14 @@ function AdminSettings() {
         setLoading(true);
         try {
             await api.put("/api/settings", settings);
-            alert("✅ Settings Updated Successfully!");
+            addToast("Settings Updated Successfully!", "success");
         } catch (err) {
-            alert("❌ Failed to update settings");
+            addToast("Failed to update settings", "error");
         } finally {
             setLoading(false);
         }
     };
 
-    // Preview Logic
     const getPreview = () => {
         const now = new Date();
         let year = "";
@@ -56,7 +57,6 @@ function AdminSettings() {
         const seq = (Number(settings.currentSequence) + 1).toString().padStart(padding, "0");
         const sep = settings.srnSeparator || "";
 
-        // Order: Year + Sep + Prefix + Sep + Seq
         const parts = [];
         if (year) parts.push(year);
         if (settings.srnPrefix) parts.push(settings.srnPrefix);
@@ -77,7 +77,6 @@ function AdminSettings() {
                 </div>
             </div>
 
-            {/* SCHOOL INFORMATION SECTION */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <div className="p-6 border-b border-slate-100 bg-slate-50">
                     <h3 className="font-bold text-slate-800">Institution Information</h3>
@@ -217,7 +216,6 @@ function AdminSettings() {
                         </div>
                     </div>
 
-                    {/* PREVIEW BOX */}
                     <div className="flex flex-col justify-center items-center bg-slate-900 rounded-2xl p-8 text-white text-center">
                         <FaEye className="text-3xl mb-4 text-slate-400" />
                         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Live Preview</p>

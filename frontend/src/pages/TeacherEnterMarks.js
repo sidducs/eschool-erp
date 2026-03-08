@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
-import { FaBook, FaClipboardCheck, FaSave, FaCalculator } from "react-icons/fa";
+import { FaSave, FaBook, FaCalculator, FaClipboardCheck } from "react-icons/fa";
+import { useToast } from "../context/ToastContext";
 import ConfirmationModal from "../components/ConfirmationModal";
 
 function TeacherEnterMarks() {
+  const { addToast } = useToast();
   const [exams, setExams] = useState([]);
   const [students, setStudents] = useState([]);
   const [examId, setExamId] = useState("");
@@ -34,7 +36,7 @@ function TeacherEnterMarks() {
       setStudents(res.data);
       setMarks({}); // Reset marks when changing exam
     } catch {
-      alert("Failed to load students");
+      addToast("Failed to load students", "error");
     } finally {
       setLoading(false);
     }
@@ -82,26 +84,10 @@ function TeacherEnterMarks() {
         if (mark === undefined || mark === "") continue;
 
         if (Number(mark) > maxMarks) {
-          alert(`Error: Marks for ${student.name} cannot exceed ${maxMarks}`);
+          addToast(`Error: Marks for ${student.name} cannot exceed ${maxMarks}`, "error");
           setLoading(false);
           return;
         }
-
-        // Simulating "AI" Remarks based on Grade & Score
-        const generateRemark = (grade, mark) => {
-          const m = Number(mark);
-          if (m === 100) return "Perfect Score! Outstanding Mastery.";
-
-          switch (grade) {
-            case "A+": return "Exceptional performance! Keep up the excellence.";
-            case "A": return "Excellent work! You have a strong grasp of the subject.";
-            case "B": return "Very Good. Consistent effort with good results.";
-            case "C": return "Good, but there is room for improvement.";
-            case "D": return "Fair. More focus and practice needed.";
-            case "F": return "Critical: Needs immediate attention and remedial study.";
-            default: return "Participated.";
-          }
-        };
 
         const calculatedGrade = calculateGrade(mark);
 
@@ -111,14 +97,14 @@ function TeacherEnterMarks() {
           marksObtained: Number(mark),
           status: calculateStatus(mark),
           grade: calculatedGrade,
-          remarks: generateRemark(calculatedGrade, mark)
+          remarks: "Participated." // Default simplified remark
         });
       }
 
-      alert("✅ Marks & Grades submitted successfully!");
+      addToast("Marks & Grades submitted successfully!", "success");
     } catch (error) {
       console.error(error);
-      alert("❌ Error submitting marks");
+      addToast("Error submitting marks", "error");
     } finally {
       setLoading(false);
     }

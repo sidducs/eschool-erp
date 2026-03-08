@@ -101,6 +101,12 @@ function Login() {
               </div>
             </div>
 
+            <div className="text-right -mt-2 mb-3">
+              <Link to="/forgot-password" className="text-xs text-blue-500 hover:underline font-medium">
+                Forgot Password?
+              </Link>
+            </div>
+
             <button
               type="submit"
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-0.5 flex items-center justify-center"

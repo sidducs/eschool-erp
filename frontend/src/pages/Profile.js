@@ -113,7 +113,7 @@ function Profile() {
                                                 previewImage ||
                                                 (profileData.profilePicture?.startsWith("http")
                                                     ? profileData.profilePicture
-                                                    : `http://localhost:5000${profileData.profilePicture}`)
+                                                    : profileData.profilePicture)
                                             }
                                             alt="Profile"
                                             className="w-full h-full object-cover rounded-full border-2 border-white"

@@ -2,6 +2,9 @@ const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 // Import Audit Logger
 const { logAction } = require("./securityController");
+const { sendEmail } = require("../services/notificationService");
+const { welcomeTemplate } = require("../services/emailTemplates");
+const Settings = require("../models/SchoolSettings");
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -52,6 +55,22 @@ const registerUser = async (req, res) => {
       status: user.status,
       token: generateToken(user._id),
     });
+
+    // 📧 Send Welcome Email (Fire and forget)
+    try {
+      (async () => {
+        const settings = await Settings.findOne();
+        const schoolName = settings?.schoolName || "ESchool ERP";
+        await sendEmail(
+          user.email,
+          `Welcome to ${schoolName}`,
+          `Hello ${user.name}, your account has been created successfully.`,
+          welcomeTemplate(user.name, user.role, schoolName)
+        );
+      })();
+    } catch (e) {
+      console.error("Welcome email failed:", e.message);
+    }
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

@@ -21,6 +21,8 @@ import EmergencyBanner from "./components/EmergencyBanner"; // Added
 import StudentDashboard from "./pages/StudentDashboard";
 import LibraryDashboard from "./pages/LibraryDashboard";
 import FeeReceiptView from "./pages/FeeReceiptView";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import StudentProfileCompletion from "./pages/StudentProfileCompletion";
 
 function AppWrapper() {
@@ -43,6 +45,8 @@ function AppWrapper() {
 
         <Route path="/register" element={!token ? <Register /> : <Navigate to="/" />} />
         <Route path="/login" element={!token ? <Login /> : <Navigate to="/" />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
 
         {/* Admin */}
         <Route

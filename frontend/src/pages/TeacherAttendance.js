@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import api from "../services/api";
 import { FaCalendarAlt, FaCheckCircle, FaTimesCircle, FaClock, FaUserClock, FaExclamationCircle } from "react-icons/fa";
 import ConfirmationModal from "../components/ConfirmationModal";
+import { useToast } from "../context/ToastContext";
 
 function TeacherAttendance() {
+  const { addToast } = useToast();
   const [classes, setClasses] = useState([]);
   const [students, setStudents] = useState([]);
   const [classId, setClassId] = useState("");
@@ -35,7 +37,6 @@ function TeacherAttendance() {
     try {
       const res = await api.get(`/api/classes/${id}/students`);
       setStudents(res.data);
-      // Initialize all as Present by default for convenience? Optional.
     } catch (err) {
       console.error("Failed to load students", err);
     } finally {
@@ -52,7 +53,7 @@ function TeacherAttendance() {
 
   const validateAndSubmit = () => {
     if (!classId || !date) {
-      alert("Please select class and date");
+      addToast("Please select class and date", "warning");
       return;
     }
 
@@ -62,7 +63,7 @@ function TeacherAttendance() {
       setModal({
         isOpen: true,
         title: "Incomplete Attendance",
-        message: `⚠️ You haven't marked attendance for ${unmarked.length} students. They will be ignored (treated as Absent/No Data). Do you want to continue?`,
+        message: `⚠️ You haven't marked attendance for ${unmarked.length} students. They will be ignored. Do you want to continue?`,
         confirmText: "Submit Anyway",
         isDanger: true,
         onConfirm: submitAttendance
@@ -85,9 +86,9 @@ function TeacherAttendance() {
         })
       );
       await Promise.all(promises);
-      alert("✅ Attendance submitted successfully!");
+      addToast("Attendance submitted successfully!", "success");
     } catch (err) {
-      alert("❌ Failed to submit attendance");
+      addToast("Failed to submit attendance", "error");
     } finally {
       setLoading(false);
     }

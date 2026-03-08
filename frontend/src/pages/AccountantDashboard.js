@@ -2,9 +2,10 @@ import { useState, useContext, useEffect } from "react";
 import api from "../services/api";
 import { AuthContext } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
+import { useTheme } from "../context/ThemeContext";
 import {
     FaChartLine, FaMoneyBillWave, FaFileInvoiceDollar, FaUserTie,
-    FaSignOutAlt, FaBars, FaTimes, FaWallet, FaHandHoldingUsd
+    FaSignOutAlt, FaBars, FaTimes, FaWallet, FaHandHoldingUsd, FaSun, FaMoon
 } from "react-icons/fa";
 import Loader from "../components/Loader";
 import PayrollManagement from "./PayrollManagement";
@@ -12,6 +13,7 @@ import FeeManager from "./FeeManager";
 
 function AccountantDashboard() {
     const { user, logout } = useContext(AuthContext);
+    const { theme, toggleTheme } = useTheme();
     const { addToast } = useToast();
     const [loading, setLoading] = useState(true);
     const [activeMenu, setActiveMenu] = useState("dashboard");
@@ -25,6 +27,7 @@ function AccountantDashboard() {
         netBalance: 0
     });
     const [expenses, setExpenses] = useState([]);
+    const [reportsData, setReportsData] = useState(null);
 
     // Forms
     const [expenseForm, setExpenseForm] = useState({ title: "", amount: "", category: "Maintenance", description: "" });
@@ -42,16 +45,17 @@ function AccountantDashboard() {
 
     const fetchDashboardData = async () => {
         try {
-            const [statsRes, expensesRes] = await Promise.all([
+            const [statsRes, expensesRes, reportsRes] = await Promise.all([
                 api.get("/api/finance/stats"),
-                api.get("/api/finance/expenses")
+                api.get("/api/finance/expenses"),
+                api.get("/api/finance/reports")
             ]);
             setStats(statsRes.data);
             setExpenses(expensesRes.data);
+            setReportsData(reportsRes.data);
             setLoading(false);
         } catch (err) {
             console.error("Failed to load finance data", err);
-            // Don't block loading on error, just show empty data or defaults
             setLoading(false);
         }
     };
@@ -89,7 +93,7 @@ function AccountantDashboard() {
             )}
 
             {/* Sidebar */}
-            <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-100 transition-transform duration-300 ease-in-out transform lg:relative lg:translate-x-0 ${showSidebar ? 'translate-x-0' : '-translate-x-full'}`}>
+            <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-100 transition-transform duration-300 ease-in-out transform lg:relative lg:translate-x-0 ${showSidebar ? 'translate-x-0' : '-translate-x-full'} dark:bg-black border-r dark:border-slate-800`}>
                 <div className="flex items-center justify-between h-16 px-6 bg-slate-950/50 sidebar-header">
                     <div className="flex items-center space-x-3">
                         <div className="bg-green-600 p-1.5 rounded-lg">
@@ -102,7 +106,7 @@ function AccountantDashboard() {
                     </button>
                 </div>
 
-                <div className="p-4 space-y-1 overflow-y-auto h-[calc(100vh-4rem)]">
+                <nav className="flex-1 p-4 space-y-1 overflow-y-auto custom-scrollbar">
                     {menuItems.map((item) => (
                         <button
                             key={item.id}
@@ -110,34 +114,47 @@ function AccountantDashboard() {
                                 setActiveMenu(item.id);
                                 if (window.innerWidth < 1024) setShowSidebar(false);
                             }}
-                            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${activeMenu === item.id
-                                ? "bg-green-600 text-white shadow-lg shadow-green-900/50"
-                                : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                            className={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl text-sm font-medium transition-all ${activeMenu === item.id
+                                ? "bg-blue-600 text-white shadow-lg"
+                                : "text-slate-400 hover:bg-slate-700 hover:text-white"
                                 }`}
                         >
-                            <item.icon className={`text-lg ${activeMenu === item.id ? "text-white" : "text-slate-500 group-hover:text-white"}`} />
+                            <item.icon className="text-lg" />
                             <span>{item.label}</span>
                         </button>
                     ))}
+                </nav>
+
+                <div className="p-4 border-t border-slate-800 space-y-2">
+                    <button
+                        onClick={toggleTheme}
+                        className="w-full flex items-center gap-3 px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-800 hover:bg-slate-700 text-slate-300"
+                    >
+                        {theme === "dark" ? <FaSun className="text-yellow-400" /> : <FaMoon className="text-blue-400" />}
+                        {theme === "dark" ? "Light Mode" : "Dark Mode"}
+                    </button>
+                    <button onClick={logout} className="w-full flex items-center justify-center gap-2 text-red-400 hover:text-red-300 text-xs font-bold py-2 hover:bg-red-900/20 rounded-xl transition-all">
+                        <FaSignOutAlt /> Sign Out
+                    </button>
                 </div>
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-                <header className="flex items-center justify-between h-16 px-6 bg-white border-b border-slate-200 shadow-sm z-10">
+            <div className="flex-1 flex flex-col min-w-0 overflow-hidden dark:bg-slate-900">
+                <header className="flex items-center justify-between h-16 px-6 bg-white border-b border-slate-200 shadow-sm z-10 dark:bg-slate-950 dark:border-slate-800">
                     <div className="flex items-center">
-                        <button onClick={() => setShowSidebar(!showSidebar)} className="mr-4 p-2 rounded-full hover:bg-slate-100 lg:hidden">
-                            <FaBars className="text-slate-600" />
+                        <button onClick={() => setShowSidebar(!showSidebar)} className="mr-4 p-2 rounded-full hover:bg-slate-100 lg:hidden dark:hover:bg-slate-800">
+                            <FaBars className="text-slate-600 dark:text-slate-300" />
                         </button>
-                        <h2 className="text-xl font-bold text-slate-800 uppercase tracking-wide">
+                        <h2 className="text-xl font-bold text-slate-800 uppercase tracking-wide dark:text-white">
                             {menuItems.find(m => m.id === activeMenu)?.label || "Overview"}
                         </h2>
                     </div>
 
                     <div className="flex items-center gap-4">
                         <div className="hidden md:flex flex-col items-end">
-                            <span className="font-bold text-sm text-slate-800">{user?.name}</span>
-                            <span className="text-[10px] uppercase font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">Accountant</span>
+                            <span className="font-bold text-sm text-slate-800 dark:text-slate-200">{user?.name}</span>
+                            <span className="text-[10px] uppercase font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full dark:bg-slate-800 dark:text-slate-400">Accountant</span>
                         </div>
                         <button
                             onClick={logout}
@@ -288,31 +305,92 @@ function AccountantDashboard() {
                                     <h4 className="font-bold text-slate-800">Financial Performance Reports</h4>
                                     <p className="text-sm text-slate-500">Download and view analytical data for various fiscal heads.</p>
                                 </div>
-                                <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-sm shadow-lg shadow-blue-500/30">Generate Full Report</button>
+                                <button
+                                    onClick={() => addToast("Generating PDF Report...", "info")}
+                                    className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-sm shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition"
+                                >
+                                    Generate Full Report
+                                </button>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {[
-                                    { title: "Monthly Fee Collection", desc: "Consolidated list of received fees this month", icon: "📊" },
-                                    { title: "Expense Analysis", desc: "Breakdown of school expenditures vs budget", icon: "📉" },
-                                    { title: "Balance Sheet", desc: "Current financial standing and net liquidity", icon: "📑" },
-                                    { title: "Tax & Compliance", desc: "Statutory filings and tax estimates", icon: "⚖️" }
-                                ].map((rep, i) => (
-                                    <div key={i} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow group cursor-pointer">
-                                        <div className="flex items-center gap-4">
-                                            <div className="text-3xl bg-slate-50 p-3 rounded-xl group-hover:bg-blue-50 transition-colors">{rep.icon}</div>
-                                            <div>
-                                                <h5 className="font-bold text-slate-700">{rep.title}</h5>
-                                                <p className="text-xs text-slate-500">{rep.desc}</p>
-                                            </div>
+                                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow group">
+                                    <div className="flex items-center gap-4 mb-4">
+                                        <div className="text-3xl bg-blue-50 p-3 rounded-xl text-blue-600">📊</div>
+                                        <div>
+                                            <h5 className="font-bold text-slate-700">Monthly Fee Collection</h5>
+                                            <p className="text-xs text-slate-500">Collected in {new Date().toLocaleString('default', { month: 'long' })}</p>
                                         </div>
                                     </div>
-                                ))}
+                                    <div className="text-3xl font-bold text-blue-700">₹{reportsData?.monthlyCollection?.toLocaleString() || 0}</div>
+                                </div>
+
+                                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow group">
+                                    <div className="flex items-center gap-4 mb-4">
+                                        <div className="text-3xl bg-red-50 p-3 rounded-xl text-red-600">📉</div>
+                                        <div>
+                                            <h5 className="font-bold text-slate-700">Expense Analysis</h5>
+                                            <p className="text-xs text-slate-500">Total expenditures by category</p>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {reportsData?.expenseAnalysis?.map((exp, i) => (
+                                            <div key={i} className="flex justify-between text-xs">
+                                                <span className="text-slate-500 font-medium">{exp.category}</span>
+                                                <span className="font-bold">₹{exp.amount.toLocaleString()}</span>
+                                            </div>
+                                        ))}
+                                        {(!reportsData?.expenseAnalysis || reportsData.expenseAnalysis.length === 0) && <p className="text-xs text-slate-400 italic">No expense data available</p>}
+                                    </div>
+                                </div>
+
+                                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow group">
+                                    <div className="flex items-center gap-4 mb-4">
+                                        <div className="text-3xl bg-green-50 p-3 rounded-xl text-green-600">📑</div>
+                                        <div>
+                                            <h5 className="font-bold text-slate-700">Balance Sheet</h5>
+                                            <p className="text-xs text-slate-500">Assets vs Liabilities</p>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="bg-slate-50 p-3 rounded-lg">
+                                            <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">Assets</p>
+                                            <p className="font-bold text-green-600">₹{reportsData?.balanceSheet?.totalAssets?.toLocaleString() || 0}</p>
+                                        </div>
+                                        <div className="bg-slate-50 p-3 rounded-lg">
+                                            <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">Liabilities</p>
+                                            <p className="font-bold text-red-600">₹{reportsData?.balanceSheet?.totalLiabilities?.toLocaleString() || 0}</p>
+                                        </div>
+                                    </div>
+                                    <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center">
+                                        <span className="text-sm font-bold text-slate-600">Net Liquidity</span>
+                                        <span className="text-lg font-black text-slate-800">₹{reportsData?.balanceSheet?.netLiquidity?.toLocaleString() || 0}</span>
+                                    </div>
+                                </div>
+
+                                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow group">
+                                    <div className="flex items-center gap-4 mb-4">
+                                        <div className="text-3xl bg-amber-50 p-3 rounded-xl text-amber-600">⚖️</div>
+                                        <div>
+                                            <h5 className="font-bold text-slate-700">Tax & Compliance</h5>
+                                            <p className="text-xs text-slate-500">Estimated statutory filings</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col justify-center h-full">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="text-sm text-slate-500">Est. Tax Payable (5%)</span>
+                                            <span className="font-bold text-amber-700">₹{reportsData?.taxCompliance?.estimatedTax?.toLocaleString() || 0}</span>
+                                        </div>
+                                        <div className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-1 rounded w-fit uppercase">
+                                            {reportsData?.taxCompliance?.status}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                                <FaFileInvoiceDollar size={40} className="mx-auto mb-4 text-slate-300" />
-                                <p className="text-slate-500 font-medium italic">Advanced SQL aggregation logic for real-time reporting is scheduled for the next update.</p>
+                            <div className="p-8 text-center bg-white rounded-2xl border border-dashed border-slate-200 shadow-sm">
+                                <FaFileInvoiceDollar size={32} className="mx-auto mb-4 text-slate-300" />
+                                <p className="text-slate-500 text-sm font-medium">Real-time financial summaries are generated using advanced database aggregation logic.</p>
                             </div>
                         </div>
                     )}

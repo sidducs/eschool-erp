@@ -25,16 +25,12 @@ const StudentReportCard = ({ student, results, onBack }) => {
     }, []);
 
     const handlePrint = useReactToPrint({
-        content: () => componentRef.current,
+        contentRef: componentRef,
         documentTitle: `ReportCard_${student.name || "Student"}`,
-        onAfterPrint: () => console.log("Print finished"),
-        onBeforeGetContent: () => {
-            if (!componentRef.current) {
-                console.error("Component Ref is null");
-                return Promise.reject("Ref is null");
-            }
-            return Promise.resolve();
-        }
+        pageStyle: `
+            @page { size: A4; margin: 15mm; }
+            body { -webkit-print-color-adjust: exact; }
+        `
     });
 
     const calculateOverallPercentage = () => {
@@ -77,113 +73,133 @@ const StudentReportCard = ({ student, results, onBack }) => {
                 </div>
 
                 {/* Printable Content */}
-                <div className="flex-1 overflow-y-auto bg-slate-200 p-8">
-                    <div ref={componentRef} className="max-w-[210mm] mx-auto bg-white p-[10mm] shadow-sm min-h-[297mm] text-slate-900 relative">
+                <div className="flex-1 overflow-y-auto bg-slate-200 p-8 flex justify-center">
+                    <div ref={componentRef} className="w-[210mm] bg-white p-[20mm] shadow-lg text-slate-900 border-[12px] border-double border-slate-100 relative">
+                        
+                        {/* THEORETICAL WATERMARK */}
+                        <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none select-none">
+                            <FaSchool size={400} />
+                        </div>
 
                         {/* Header */}
-                        <div className="border-b-4 border-double border-slate-900 pb-6 mb-8 text-center">
-                            <div className="flex items-center justify-center gap-4 mb-2">
-                                <FaSchool className="text-4xl text-slate-900" />
-                                <h1 className="text-3xl font-serif font-bold uppercase tracking-widest text-slate-900">{schoolSettings.schoolName}</h1>
+                        <div className="border-b-2 border-slate-900 pb-8 mb-10 text-center relative z-10">
+                            <div className="flex flex-col items-center gap-2 mb-4">
+                                <FaSchool className="text-5xl text-slate-900 mb-2" />
+                                <h1 className="text-4xl font-serif font-bold uppercase tracking-[0.2em] text-slate-900 leading-tight">
+                                    {schoolSettings.schoolName}
+                                </h1>
+                                <div className="h-1 w-32 bg-slate-900 my-2"></div>
                             </div>
-                            <p className="text-slate-500 text-sm font-serif italic">Excellence in Education • Est. 2024</p>
+                            <p className="text-slate-600 font-serif italic text-lg mb-1 uppercase tracking-widest font-bold">Academic Excellence Report</p>
                             <p className="text-slate-500 text-sm">{schoolSettings.address}</p>
+                            <p className="text-slate-500 text-xs mt-1">Ph: {schoolSettings.phone} • Web: {schoolSettings.website}</p>
                         </div>
 
-                        {/* Report Title */}
-                        <div className="text-center mb-10">
-                            <span className="inline-block px-8 py-2 border-2 border-slate-900 text-xl font-serif font-bold uppercase tracking-widest">
-                                Official Report Card
-                            </span>
-                            <p className="mt-2 text-slate-500 font-medium">Academic Year 2024-2025</p>
-                        </div>
-
-                        {/* Student Details */}
-                        <div className="grid grid-cols-2 gap-8 mb-10 text-sm">
-                            <div className="space-y-2">
-                                <div className="flex"><span className="w-32 font-bold uppercase text-slate-500 text-xs tracking-wider pt-1">Student Name</span> <span className="text-lg font-bold text-slate-800 uppercase">{student.name}</span></div>
-                                <div className="flex"><span className="w-32 font-bold uppercase text-slate-500 text-xs tracking-wider pt-1">Father's Name</span> <span className="font-semibold text-slate-700 uppercase">{student.fatherName || "N/A"}</span></div>
-                                <div className="flex"><span className="w-32 font-bold uppercase text-slate-500 text-xs tracking-wider pt-1">Mother's Name</span> <span className="font-semibold text-slate-700 uppercase">{student.motherName || "N/A"}</span></div>
-                                <div className="flex"><span className="w-32 font-bold uppercase text-slate-500 text-xs tracking-wider pt-1">Date of Birth</span> <span className="font-semibold text-slate-700">{student.dob ? new Date(student.dob).toLocaleDateString() : "N/A"}</span></div>
+                        {/* Student Details Grid */}
+                        <div className="grid grid-cols-2 gap-12 mb-12 relative z-10">
+                            <div className="space-y-4">
+                                <div className="border-b border-slate-200 pb-2">
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Student Name</p>
+                                    <p className="text-xl font-bold text-slate-900 uppercase">{student.name}</p>
+                                </div>
+                                <div className="border-b border-slate-200 pb-2">
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Guardian Details</p>
+                                    <p className="font-semibold text-slate-800 uppercase">{student.fatherName || "N/A"}</p>
+                                </div>
                             </div>
-                            <div className="space-y-2 text-right">
-                                <div className="flex justify-end"><span className="w-32 font-bold uppercase text-slate-500 text-xs tracking-wider pt-1">Class</span> <span className="text-lg font-bold text-slate-800">{student.classId?.name || "10"} - {student.classId?.section || "A"}</span></div>
-                                <div className="flex justify-end"><span className="w-32 font-bold uppercase text-slate-500 text-xs tracking-wider pt-1">SRN</span> <span className="font-mono font-bold text-slate-700">{student.admissionId || "N/A"}</span></div>
+                            <div className="space-y-4 text-right">
+                                <div className="border-b border-slate-200 pb-2">
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Registration No. (SRN)</p>
+                                    <p className="font-mono font-bold text-lg text-slate-900">{student.admissionId || "N/A"}</p>
+                                </div>
+                                <div className="border-b border-slate-200 pb-2">
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Class & Section</p>
+                                    <p className="font-bold text-slate-800">{student.classId?.name || "N/A"} - {student.classId?.section || "N/A"}</p>
+                                </div>
                             </div>
                         </div>
 
-                        {/* Grades Table */}
-                        <table className="w-full border-collapse border border-slate-900 mb-10">
-                            <thead>
-                                <tr className="bg-slate-50 text-slate-900 uppercase text-xs font-bold tracking-wider">
-                                    <th className="border border-slate-900 p-3 text-left w-1/3">Subject</th>
-                                    <th className="border border-slate-900 p-3 text-center">Max Marks</th>
-                                    <th className="border border-slate-900 p-3 text-center">Obtained</th>
-                                    <th className="border border-slate-900 p-3 text-center">Grade</th>
-                                    <th className="border border-slate-900 p-3 text-left w-1/3">Remarks</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {results.map((r, i) => (
-                                    <tr key={i} className="text-sm">
-                                        <td className="border border-slate-900 p-3 font-bold font-serif">{r.subject || "General"}</td>
-                                        <td className="border border-slate-900 p-3 text-center font-mono">{r.totalMarks}</td>
-                                        <td className="border border-slate-900 p-3 text-center font-mono font-bold">{r.marksObtained}</td>
-                                        <td className="border border-slate-900 p-3 text-center font-bold">{r.grade}</td>
-                                        <td className="border border-slate-900 p-3 italic text-slate-600">{r.remarks}</td>
+                        {/* Academic Summary Table */}
+                        <div className="mb-12 relative z-10">
+                            <table className="w-full border-collapse">
+                                <thead>
+                                    <tr className="bg-slate-900 text-white uppercase text-[10px] font-bold tracking-[0.2em]">
+                                        <th className="p-4 text-left border border-slate-900">Subject Description</th>
+                                        <th className="p-4 text-center border border-slate-900">Max</th>
+                                        <th className="p-4 text-center border border-slate-900">Obtained</th>
+                                        <th className="p-4 text-center border border-slate-900 w-24">Grade</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {results.map((r, i) => (
+                                        <tr key={i} className="text-sm border-b border-slate-200">
+                                            <td className="p-4 font-bold border-l border-r border-slate-300">{r.subject || "General"}</td>
+                                            <td className="p-4 text-center font-mono border-r border-slate-300">{r.totalMarks}</td>
+                                            <td className="p-4 text-center font-mono font-bold border-r border-slate-300">{r.marksObtained}</td>
+                                            <td className="p-4 text-center font-bold border-r border-slate-300">
+                                                <span className={`px-3 py-1 rounded bg-slate-50 border ${r.grade === 'F' ? 'text-red-600 border-red-100' : 'text-slate-900 border-slate-200'}`}>
+                                                    {r.grade}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
 
-                        {/* Summary */}
-                        <div className="flex gap-8 mb-16">
-                            <div className="flex-1 border border-slate-900 p-4">
-                                <h4 className="font-bold uppercase text-xs text-slate-500 tracking-wider mb-2">Overall Performance</h4>
-                                <div className="flex justify-between items-end border-b border-slate-200 pb-2 mb-2">
-                                    <span>Percentage</span>
-                                    <span className="font-mono font-bold text-xl">{pct}%</span>
-                                </div>
-                                <div className="flex justify-between items-end">
-                                    <span>Final Grade</span>
-                                    <span className="font-serif font-bold text-2xl">{overallGrade}</span>
+                        {/* Calculation Footer */}
+                        <div className="flex justify-between items-start mb-20 relative z-10">
+                            <div className="w-64 p-6 bg-slate-50 border-2 border-slate-900 rounded-xl">
+                                <div className="space-y-3">
+                                    <div className="flex justify-between items-center text-xs">
+                                        <span className="text-slate-500 font-bold uppercase tracking-widest">Aggregate</span>
+                                        <span className="font-bold text-lg">{pct}%</span>
+                                    </div>
+                                    <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
+                                        <div style={{ width: `${pct}%` }} className="h-full bg-slate-900"></div>
+                                    </div>
+                                    <div className="flex justify-between items-center bg-slate-900 text-white p-3 rounded-lg mt-4">
+                                        <span className="text-[10px] font-bold uppercase tracking-widest">Final Rank</span>
+                                        <span className="text-xl font-serif font-bold">{overallGrade}</span>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="flex-1 border border-slate-900 p-4 flex items-center justify-center bg-slate-50">
-                                <div className="text-center">
-                                    <FaMedal className="text-4xl text-slate-400 mx-auto mb-2" />
-                                    <p className="font-serif italic font-bold text-slate-600">
-                                        {overallGrade === "F" ? "Failed" : overallGrade === "A+" || overallGrade === "A" ? "Distinction" : "Promoted"}
-                                    </p>
+
+                            <div className="text-right italic text-slate-500 max-w-xs">
+                                <p className="text-sm leading-relaxed mb-4">
+                                    "This document certifies the academic achievements of the student for the evaluation period mentioned above."
+                                </p>
+                                <div className="inline-block p-4 border-2 border-slate-900 rounded-full">
+                                    <FaMedal className={`text-3xl ${overallGrade === 'F' ? 'text-slate-300' : 'text-amber-500'}`} />
                                 </div>
                             </div>
                         </div>
 
                         {/* Signatures */}
-                        <div className="grid grid-cols-3 gap-10 mt-auto pt-20">
+                        <div className="grid grid-cols-3 gap-16 mt-auto relative z-10">
                             <div className="text-center">
-                                <div className="border-t border-slate-900 pt-2">
-                                    <p className="font-bold text-xs uppercase tracking-wider">Class Teacher</p>
-                                </div>
+                                <div className="h-16 border-b border-slate-400 mb-2 italic text-slate-300 text-xs flex items-end justify-center">E-Signature Validated</div>
+                                <p className="font-bold text-[10px] uppercase tracking-widest text-slate-500">School Registrar</p>
                             </div>
                             <div className="text-center">
-                                <div className="border-t border-slate-900 pt-2">
-                                    <p className="font-bold text-xs uppercase tracking-wider">Principal</p>
-                                </div>
+                                <div className="h-16 border-b border-slate-400 mb-2 italic text-slate-300 text-xs flex items-end justify-center">Approval Pending</div>
+                                <p className="font-bold text-[10px] uppercase tracking-widest text-slate-500">Principal's Signature</p>
                             </div>
                             <div className="text-center">
-                                <div className="border-t border-slate-900 pt-2">
-                                    <p className="font-bold text-xs uppercase tracking-wider">Parent / Guardian</p>
-                                </div>
+                                <div className="h-16 border-b border-slate-400 mb-2"></div>
+                                <p className="font-bold text-[10px] uppercase tracking-widest text-slate-500">Parent/Guardian</p>
                             </div>
                         </div>
 
-                        <div className="absolute bottom-5 left-0 right-0 text-center">
-                            <p className="text-[10px] text-slate-400 uppercase tracking-widest">Generated by ESchool ERP System</p>
+                        {/* Fine Print */}
+                        <div className="mt-12 pt-6 border-t border-slate-100 text-center relative z-10">
+                            <p className="text-[8px] text-slate-400 uppercase tracking-[0.3em]">
+                                Computer Generated Document • eschool-erp-integrated-secure-report
+                            </p>
                         </div>
-
                     </div>
                 </div>
+
 
             </div>
         </div>

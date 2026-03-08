@@ -35,6 +35,10 @@ const studentFeeSchema = new mongoose.Schema(
       enum: ["PAID", "PENDING"],
       default: "PENDING",
     },
+
+    dueDate: {
+      type: Date,
+    },
   },
   { timestamps: true }
 );
