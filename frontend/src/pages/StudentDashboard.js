@@ -3,7 +3,12 @@ import { ThemeContext } from "../context/ThemeContext";
 // import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { AuthContext } from "../context/AuthContext";
-import { FaUniversity, FaUserGraduate, FaClipboardList, FaCalendarAlt, FaBookOpen, FaGraduationCap, FaSignOutAlt, FaBars, FaTimes, FaSun, FaMoon } from "react-icons/fa";
+import { 
+  FaUniversity, FaUserGraduate, FaClipboardList, FaCalendarAlt, FaBookOpen, 
+  FaGraduationCap, FaSignOutAlt, FaBars, FaTimes, FaSun, FaMoon,
+  FaTachometerAlt, FaClipboardCheck, FaBook, FaFilePdf, FaBullhorn,
+  FaBookReader, FaPrint, FaLightbulb, FaBus, FaQuestionCircle, FaCertificate, FaCommentDots, FaIdCard
+} from "react-icons/fa";
 import Loader from "../components/Loader";
 
 // Sub-components
@@ -21,11 +26,6 @@ import CertificateGenerator from "../pages/CertificateGenerator";
 import StudentTransport from "../pages/StudentTransport"; // Added
 import StudentIDCard from "./StudentIDCard";
 
-import {
-  FaBars, FaTachometerAlt, FaClipboardCheck, FaBook, FaCalendarAlt,
-  FaFilePdf, FaUserGraduate, FaBullhorn,
-  FaBookReader, FaTimes, FaSignOutAlt, FaPrint, FaClipboardList, FaLightbulb, FaBus, FaQuestionCircle, FaCertificate, FaCommentDots, FaSun, FaMoon, FaIdCard
-} from "react-icons/fa";
 
 function StudentDashboard() {
   const { theme, toggleTheme } = useContext(ThemeContext);

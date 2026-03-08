@@ -7,7 +7,7 @@ import { useToast } from "../context/ToastContext";
 import api from "../services/api";
 import Loader from "../components/Loader";
 import ConfirmationModal from "../components/ConfirmationModal";
-import { FaSun, FaMoon, FaTachometerAlt, FaUsers, FaMoneyBillWave, FaChalkboardTeacher,
+import { FaUniversity, FaSun, FaMoon, FaTachometerAlt, FaUsers, FaMoneyBillWave, FaChalkboardTeacher,
   FaClipboardCheck, FaBook, FaUpload, FaBullhorn,
   FaUserGraduate, FaUserTie, FaBars, FaArrowLeft, FaEdit, FaTrash, FaPaperPlane,
   FaSearch, FaPrint, FaBookReader, FaTimes, FaUserPlus, FaCogs, FaMagic, FaUserCheck, FaLock, FaBus, FaCommentDots, FaCalendarAlt

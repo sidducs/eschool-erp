@@ -7,7 +7,7 @@ import AlertMessage from "../components/AlertMessage";
 import TeacherAssignments from "./TeacherAssignments";
 import TeacherQuizzes from "./TeacherQuizzes";
 import {
-   FaChalkboardTeacher, FaClipboardCheck, FaCalendarAlt, FaCalendarCheck,
+   FaUniversity, FaChalkboardTeacher, FaClipboardCheck, FaCalendarAlt, FaCalendarCheck,
    FaUserGraduate, FaBell, FaSignOutAlt, FaBars, FaCheckCircle,
    FaSave, FaMagic, FaSpinner, FaBullhorn, FaBookReader, FaTimes, FaClipboardList,
    FaLightbulb, FaCommentDots, FaQuestionCircle, FaSun, FaMoon
