@@ -3,6 +3,7 @@ import { ThemeContext } from "../context/ThemeContext";
 // import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { AuthContext } from "../context/AuthContext";
+import { FaUniversity, FaUserGraduate, FaClipboardList, FaCalendarAlt, FaBookOpen, FaGraduationCap, FaSignOutAlt, FaBars, FaTimes, FaSun, FaMoon } from "react-icons/fa";
 import Loader from "../components/Loader";
 
 // Sub-components
@@ -139,10 +140,10 @@ function StudentDashboard() {
       {/* Sidebar */}
       <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-100 transition-transform duration-300 ease-in-out transform lg:relative lg:translate-x-0 ${showSidebar ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex items-center justify-between h-16 px-6 bg-slate-950/50 sidebar-header">
-            <a href="https://eschool-erp.vercel.app/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <img src="/eschool-logo-v4.png" alt="eSchool ERP" className="h-8 w-auto object-contain" />
-              <span className="font-bold text-lg tracking-tight text-white">eSchool <span className="text-blue-400">ERP</span></span>
-            </a>
+            <div className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer">
+              <FaUniversity className="text-blue-500 text-2xl" />
+              <span className="font-bold text-lg tracking-tight text-white uppercase">eSchool <span className="text-blue-400">ERP</span></span>
+            </div>
           <div className="flex items-center gap-2">
             <button
               onClick={toggleTheme}
