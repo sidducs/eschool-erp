@@ -140,7 +140,7 @@ function StudentDashboard() {
       <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-100 transition-transform duration-300 ease-in-out transform lg:relative lg:translate-x-0 ${showSidebar ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex items-center justify-between h-16 px-6 bg-slate-950/50 sidebar-header">
             <a href="https://eschool-erp.vercel.app/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <img src="/eschool-logo-new.png" alt="eSchool ERP" className="h-8 w-auto object-contain" />
+              <img src="/eschool-logo-v3.png" alt="eSchool ERP" className="h-8 w-auto object-contain" />
               <span className="font-bold text-lg tracking-tight text-white">eSchool <span className="text-blue-400">ERP</span></span>
             </a>
           <div className="flex items-center gap-2">
