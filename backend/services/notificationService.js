@@ -1,63 +1,47 @@
 const nodemailer = require("nodemailer");
 
-// Configure Transporter with Real Credentials
 const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 465,
-    secure: true, // true for 465, false for other ports
+    secure: true,
     auth: {
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-    },
-    connectionTimeout: 10000, // 10 seconds
-    greetingTimeout: 10000,
+        pass: process.env.EMAIL_PASS
+    }
+});
+
+// Verify connection once
+transporter.verify((error) => {
+    if (error) {
+        console.error("Email service initialization failed");
+    }
 });
 
 const sendEmail = async (to, subject, text) => {
     try {
-        if (!to || !to.includes("@")) {
-            console.log(`[Email Skipped] Invalid email: ${to}`);
-            return;
-        }
+        if (!to || !to.includes("@")) return false;
 
-        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-            console.error("[Email Error] Missing EMAIL_USER or EMAIL_PASS in .env");
-            return false;
-        }
-
-        // ✅ Real Email Sending with 10s Timeout
-        console.log(`[Email Attempt] To: ${to} | Subject: ${subject}`);
-        
-        const emailPromise = transporter.sendMail({ 
-            from: `"ESchool ERP" <${process.env.EMAIL_USER}>`, 
-            to, 
-            subject, 
-            text 
+        await transporter.sendMail({
+            from: `"ESchool ERP" <${process.env.EMAIL_USER}>`,
+            to,
+            subject,
+            text
         });
 
-        // Timeout promise
-        const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error("Email timeout after 10s")), 10000)
-        );
-
-        const info = await Promise.race([emailPromise, timeoutPromise]);
-
-        console.log(`[Email Success] MessageId: ${info.messageId} | Recipient: ${to}`);
         return true;
     } catch (error) {
-        console.error("[Email Failure]:", error.message);
-        return false; // Return false so the rest of the request can complete
+        console.error("Email sending failed");
+        return false;
     }
 };
 
 const sendSMS = async (phone, message) => {
     try {
-        if (!phone) return;
-        // Placeholder for SMS Gateway (Twilio/Fast2SMS)
-        console.log(`[SMS SENT] To: ${phone} | Message: ${message}`);
+        if (!phone) return false;
+
+        // Placeholder for real SMS service
         return true;
     } catch (error) {
-        console.error("SMS Error:", error);
         return false;
     }
 };
