@@ -5,7 +5,7 @@ import { useToast } from "../context/ToastContext";
 import { useTheme } from "../context/ThemeContext";
 import {
     FaChartLine, FaMoneyBillWave, FaFileInvoiceDollar, FaUserTie,
-    FaSignOutAlt, FaBars, FaTimes, FaWallet, FaHandHoldingUsd, FaSun, FaMoon
+    FaSignOutAlt, FaBars, FaTimes, FaWallet, FaSun, FaMoon
 } from "react-icons/fa";
 import Loader from "../components/Loader";
 import PayrollManagement from "./PayrollManagement";

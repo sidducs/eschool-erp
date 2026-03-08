@@ -1,10 +1,9 @@
 import { useEffect, useState, useContext } from "react";
 import api from "../services/api";
 import { AuthContext } from "../context/AuthContext";
-import { useToast } from "../context/ToastContext";
 import { useTheme } from "../context/ThemeContext";
 import {
-    FaUserGraduate, FaChartPie, FaFileInvoiceDollar, FaSchool, FaChild,
+    FaChartPie, FaFileInvoiceDollar, FaChild,
     FaSignOutAlt, FaCalendarAlt, FaClipboardCheck, FaBook, FaBars, FaTimes,
     FaBullhorn, FaSun, FaMoon
 } from "react-icons/fa";

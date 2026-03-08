@@ -7,7 +7,7 @@ import {
   FaArrowRight, FaCheckCircle, FaBars, FaTimes, FaEnvelope,
   FaCalculator, FaUserFriends, FaRobot, FaBell, FaFileAlt,
   FaCalendarAlt, FaBus, FaBook, FaChartBar, FaShieldAlt,
-  FaStar, FaMoon, FaSun, FaGraduationCap, FaIdCard,
+  FaStar, FaGraduationCap, FaIdCard,
   FaMoneyBillWave, FaClipboardList, FaClock, FaLock
 } from "react-icons/fa";
 
