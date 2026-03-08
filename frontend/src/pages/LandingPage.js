@@ -207,9 +207,8 @@ export default function LandingPage() {
 
       <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${scrolled ? "bg-slate-900/95 backdrop-blur-md shadow-xl shadow-black/20" : "bg-transparent"}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2.5">
-            <img src="/eschool-logo.png" alt="Logo" className="w-10 h-10 object-contain shadow-lg rounded-xl" />
-            <span className="text-white font-extrabold text-lg tracking-tight">eSchool <span className="text-blue-400">ERP</span></span>
+          <div className="flex items-center">
+            <img src="/eschool-logo-full.png" alt="eSchool ERP" className="h-12 w-auto object-contain transition-transform hover:scale-105" />
           </div>
 
           <div className="hidden md:flex items-center gap-8">
@@ -702,9 +701,8 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex flex-col md:flex-row justify-between items-start gap-10">
             <div>
-              <div className="flex items-center gap-2.5 mb-4">
-                <img src="/eschool-logo.png" alt="Logo" className="w-10 h-10 object-contain" />
-                <span className="text-white font-extrabold text-lg">eSchool <span className="text-blue-400">ERP</span></span>
+              <div className="flex items-center mb-4">
+                <img src="/eschool-logo-full.png" alt="eSchool ERP" className="h-14 w-auto object-contain" />
               </div>
               <p className="text-slate-500 text-sm max-w-xs leading-relaxed">A modern, AI-powered School ERP built with the MERN stack. Free, open-source, and production-ready.</p>
             </div>
