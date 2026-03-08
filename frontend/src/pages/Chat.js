@@ -94,10 +94,16 @@ function Chat() {
         c.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    const [showChatArea, setShowChatArea] = useState(false);
+
+    useEffect(() => {
+        if (selectedUser) setShowChatArea(true);
+    }, [selectedUser]);
+
     return (
-        <div className="animate-fadeIn flex h-[calc(100vh-180px)] bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
+        <div className="animate-fadeIn flex h-[calc(100vh-180px)] bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden relative">
             {/* Sidebar - Contacts */}
-            <div className="w-full md:w-80 border-r border-slate-100 flex flex-col bg-slate-50/50">
+            <div className={`${showChatArea ? 'hidden md:flex' : 'flex'} w-full md:w-80 border-r border-slate-100 flex-col bg-slate-50/50`}>
                 <div className="p-4 bg-white border-b border-slate-100">
                     <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2 mb-4">
                         <FaCommentDots className="text-blue-600" /> Messages
@@ -123,7 +129,10 @@ function Chat() {
                         filteredContacts.map((contact) => (
                             <button
                                 key={contact._id}
-                                onClick={() => setSelectedUser(contact)}
+                                onClick={() => {
+                                    setSelectedUser(contact);
+                                    setShowChatArea(true);
+                                }}
                                 className={`w-full flex items-center gap-3 p-3 rounded-2xl transition-all ${selectedUser?._id === contact._id
                                         ? "bg-blue-600 text-white shadow-lg shadow-blue-200 translate-x-1"
                                         : "hover:bg-white hover:shadow-md text-slate-600"
@@ -150,11 +159,17 @@ function Chat() {
             </div>
 
             {/* Chat Area */}
-            <div className="flex-1 flex flex-col bg-white">
+            <div className={`${showChatArea ? 'flex' : 'hidden md:flex'} flex-1 flex-col bg-white overflow-hidden`}>
                 {selectedUser ? (
                     <>
                         {/* Header */}
                         <div className="p-4 border-b border-slate-100 flex items-center gap-3 bg-white/80 backdrop-blur-md sticky top-0 z-10">
+                            <button 
+                                onClick={() => setShowChatArea(false)}
+                                className="md:hidden p-2 text-slate-400 hover:text-slate-600"
+                            >
+                                <FaCommentDots className="rotate-180" />
+                            </button>
                             <div className="relative">
                                 {selectedUser.profilePicture ? (
                                     <img src={selectedUser.profilePicture} alt="" className="w-10 h-10 rounded-full object-cover" />
@@ -169,7 +184,7 @@ function Chat() {
                         </div>
 
                         {/* Messages List */}
-                        <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50/30">
+                        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-slate-50/30">
                             {messages.length === 0 ? (
                                 <div className="h-full flex flex-col items-center justify-center text-slate-400">
                                     <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-3">
@@ -183,7 +198,7 @@ function Chat() {
                                     const isMe = senderId === user?._id;
                                     return (
                                         <div key={idx} className={`flex ${isMe ? "justify-end" : "justify-start animate-slideInLeft"}`}>
-                                            <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl shadow-sm text-sm ${isMe
+                                            <div className={`max-w-[85%] md:max-w-[75%] px-4 py-2.5 rounded-2xl shadow-sm text-sm ${isMe
                                                     ? "bg-slate-900 text-white rounded-br-none"
                                                     : "bg-white text-slate-700 border border-slate-100 rounded-bl-none"
                                                 }`}>
@@ -201,7 +216,7 @@ function Chat() {
 
                         {/* Input Area */}
                         <form onSubmit={handleSendMessage} className="p-4 bg-white border-t border-slate-100">
-                            <div className="flex gap-3 bg-slate-50 p-2 rounded-2xl items-center focus-within:ring-2 focus-within:ring-blue-500/20 transition-all border border-slate-200">
+                            <div className="flex gap-2 bg-slate-50 p-2 rounded-2xl items-center focus-within:ring-2 focus-within:ring-blue-500/20 transition-all border border-slate-200">
                                 <input
                                     type="text"
                                     placeholder="Type a message..."

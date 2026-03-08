@@ -171,7 +171,7 @@ function DoubtForum() {
                                         ))}
 
                                         {/* Reply Box */}
-                                        <div className="mt-4 pt-4 border-t border-slate-50 pl-12">
+                                        <div className="mt-4 pt-4 border-t border-slate-50 pl-4 md:pl-12">
                                             {replyingTo === doubt._id ? (
                                                 <div className="flex gap-3 animate-fadeIn">
                                                     <input

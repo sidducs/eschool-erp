@@ -1,7 +1,7 @@
 import { useState } from "react";
 import api from "../services/api";
 import { useToast } from "../context/ToastContext";
-import { FaPaperPlane, FaUsers, FaUserGraduate, FaChalkboardTeacher, FaUserTie } from "react-icons/fa";
+import { FaPaperPlane, FaUsers, FaUserGraduate, FaChalkboardTeacher, FaUserTie, FaMagic, FaSpinner } from "react-icons/fa";
 
 function SendNotification() {
     const { addToast } = useToast();
@@ -11,6 +11,24 @@ function SendNotification() {
         subject: "",
         message: ""
     });
+
+    const [aiLoading, setAiLoading] = useState(false);
+
+    const handleGenerateContent = async () => {
+        if (!formData.subject.trim()) {
+            return addToast("Please enter a subject first!", "warning");
+        }
+        setAiLoading(true);
+        try {
+            const res = await api.post("/api/ai/generate-notice", { topic: formData.subject });
+            setFormData(prev => ({ ...prev, message: res.data.content }));
+            addToast("AI Content Generated!", "success");
+        } catch (err) {
+            addToast("AI Generation failed", "error");
+        } finally {
+            setAiLoading(false);
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -43,7 +61,7 @@ function SendNotification() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label className="block text-sm font-bold text-slate-700 mb-2">Recipient Group</label>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 {[
                                     { id: "all", label: "Everyone", icon: FaUsers },
                                     { id: "student", label: "Students", icon: FaUserGraduate },
@@ -78,8 +96,19 @@ function SendNotification() {
                         </div>
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-2">Message Content</label>
+                    <div className="relative">
+                        <div className="flex justify-between items-center mb-2">
+                            <label className="block text-sm font-bold text-slate-700">Message Content</label>
+                            <button
+                                type="button"
+                                onClick={handleGenerateContent}
+                                disabled={aiLoading || !formData.subject.trim()}
+                                className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 bg-blue-50 px-3 py-1.5 rounded-full border border-blue-100 transition-all hover:bg-blue-100 disabled:opacity-50"
+                            >
+                                {aiLoading ? <FaSpinner className="animate-spin" /> : <FaMagic />}
+                                {aiLoading ? "Generating..." : "Generate with AI"}
+                            </button>
+                        </div>
                         <textarea
                             className="w-full px-4 py-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow h-40 resize-none"
                             placeholder="Type your message here..."

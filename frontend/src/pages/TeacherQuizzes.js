@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
-import { FaPlus, FaTrash, FaSave, FaTimes, FaQuestionCircle } from "react-icons/fa";
+import { FaPlus, FaTrash, FaSave, FaTimes, FaQuestionCircle, FaMagic, FaSpinner } from "react-icons/fa";
 import Loader from "../components/Loader";
 import AlertMessage from "../components/AlertMessage";
 import ConfirmationModal from "../components/ConfirmationModal";
@@ -22,6 +22,9 @@ function TeacherQuizzes() {
             { questionText: "", options: ["", "", "", ""], correctOption: 0 } // Default 1 question
         ]
     });
+
+    const [aiTopic, setAiTopic] = useState("");
+    const [aiLoading, setAiLoading] = useState(false);
 
     useEffect(() => {
         fetchData();
@@ -81,6 +84,26 @@ function TeacherQuizzes() {
     const removeQuestion = (index) => {
         const newQuestions = formData.questions.filter((_, i) => i !== index);
         setFormData({ ...formData, questions: newQuestions });
+    };
+
+    const handleAiGenerate = async () => {
+        if (!aiTopic.trim()) return showAlert("warning", "Enter a topic first!");
+        setAiLoading(true);
+        try {
+            const res = await api.post("/api/ai/generate-quiz", { topic: aiTopic, count: 5 });
+            if (res.data.questions) {
+                setFormData(prev => ({
+                    ...prev,
+                    questions: res.data.questions
+                }));
+                setAiTopic("");
+                showAlert("success", "AI Generated 5 Questions!");
+            }
+        } catch (err) {
+            showAlert("danger", "AI Generation failed. Check key/console.");
+        } finally {
+            setAiLoading(false);
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -185,6 +208,31 @@ function TeacherQuizzes() {
                                     ))}
                                 </select>
                             </div>
+                        </div>
+
+                        {/* AI Generator Helper */}
+                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100 flex flex-col md:flex-row items-center gap-4">
+                            <div className="flex-1">
+                                <p className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                    <FaMagic /> AI Quiz Assistant
+                                </p>
+                                <input
+                                    type="text"
+                                    className="w-full p-2 border border-blue-200 rounded outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="Enter topic (e.g. Life Cycle of Frog)"
+                                    value={aiTopic}
+                                    onChange={(e) => setAiTopic(e.target.value)}
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleAiGenerate}
+                                disabled={aiLoading || !aiTopic.trim()}
+                                className="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+                            >
+                                {aiLoading ? <FaSpinner className="animate-spin" /> : <FaMagic />}
+                                Generate with AI
+                            </button>
                         </div>
 
                         <div className="space-y-6">

@@ -74,6 +74,7 @@ function AdminStudentFees() {
             onAction={() => navigate("/admin/assign-fee")}
           />
         ) : (
+        <div className="table-responsive">
           <table className="table table-bordered">
             <thead>
               <tr>
@@ -115,9 +116,9 @@ function AdminStudentFees() {
                         setPaymentInputs({
                           ...paymentInputs,
                           [f._id]: e.target.value,
-                        })
-                      }
-                    />
+                          })
+                        }
+                      />
 
                     <div className="d-flex gap-2">
                       <button
@@ -142,6 +143,7 @@ function AdminStudentFees() {
               ))}
             </tbody>
           </table>
+        </div>
         )}
       </div>
 

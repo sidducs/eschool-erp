@@ -265,8 +265,8 @@ function StudentQuizzes() {
                     <h3 className="font-bold text-xl text-slate-800 mb-4 flex items-center gap-2 border-t border-slate-200 pt-8">
                         <FaHistory className="text-slate-400" /> Your History
                     </h3>
-                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                        <table className="w-full text-left">
+                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden overflow-x-auto">
+                        <table className="w-full text-left min-w-[600px]">
                             <thead className="bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500 font-bold">
                                 <tr>
                                     <th className="p-4">Quiz Title</th>

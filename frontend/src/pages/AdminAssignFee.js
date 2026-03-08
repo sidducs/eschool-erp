@@ -307,9 +307,9 @@ function AdminAssignFee() {
             </label>
           </div>
 
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto overflow-x-auto">
             {/* Search Bar */}
-            <div className="px-6 py-2 bg-white sticky top-0 z-20 border-b border-slate-100">
+            <div className="px-6 py-2 bg-white sticky top-0 z-20 border-b border-slate-100 min-w-[600px]">
               <input
                 type="text"
                 placeholder="Search student by name..."
@@ -330,7 +330,7 @@ function AdminAssignFee() {
                 <p>No students found in this class.</p>
               </div>
             ) : (
-              <table className="w-full text-left text-sm">
+              <table className="w-full text-left text-sm min-w-[600px]">
                 <thead className="bg-slate-50 sticky top-12 z-10">
                   <tr>
                     <th className="px-6 py-3 border-b border-slate-100 w-16"></th>

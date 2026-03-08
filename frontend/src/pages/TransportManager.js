@@ -124,42 +124,44 @@ function TransportManager() {
 
                     <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
                         <h4 className="font-bold text-slate-700 mb-4">Fleet Overview</h4>
-                        <table className="w-full text-sm text-left">
-                            <thead className="bg-slate-50 border-b">
-                                <tr>
-                                    <th className="p-3">Bus No</th>
-                                    <th className="p-3">Driver</th>
-                                    <th className="p-3">Phone</th>
-                                    <th className="p-3">Route</th>
-                                    <th className="p-3">Capacity</th>
-                                    <th className="p-3 text-right">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {vehicles.map(v => (
-                                    <tr key={v._id} className="border-b hover:bg-slate-50">
-                                        <td className="p-3 font-bold">{v.vehicleNumber}</td>
-                                        <td className="p-3">{v.driverName}</td>
-                                        <td className="p-3">{v.driverContact}</td>
-                                        <td className="p-3">{v.routeId ? v.routeId.routeId : "Unassigned"}</td>
-                                        <td className="p-3">{v.capacity}</td>
-                                        <td className="p-3 text-right">
-                                            <button
-                                                onClick={() => setModal({
-                                                    isOpen: true,
-                                                    title: "Delete Vehicle?",
-                                                    message: `Delete vehicle ${v.vehicleNumber}?`,
-                                                    onConfirm: () => deleteVehicle(v._id)
-                                                })}
-                                                className="text-red-500 hover:bg-red-50 p-2 rounded-full transition"
-                                            >
-                                                <FaTrash />
-                                            </button>
-                                        </td>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left min-w-[600px]">
+                                <thead className="bg-slate-50 border-b">
+                                    <tr>
+                                        <th className="p-3">Bus No</th>
+                                        <th className="p-3">Driver</th>
+                                        <th className="p-3">Phone</th>
+                                        <th className="p-3">Route</th>
+                                        <th className="p-3">Capacity</th>
+                                        <th className="p-3 text-right">Action</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {vehicles.map(v => (
+                                        <tr key={v._id} className="border-b hover:bg-slate-50">
+                                            <td className="p-3 font-bold">{v.vehicleNumber}</td>
+                                            <td className="p-3">{v.driverName}</td>
+                                            <td className="p-3">{v.driverContact}</td>
+                                            <td className="p-3">{v.routeId ? v.routeId.routeId : "Unassigned"}</td>
+                                            <td className="p-3">{v.capacity}</td>
+                                            <td className="p-3 text-right">
+                                                <button
+                                                    onClick={() => setModal({
+                                                        isOpen: true,
+                                                        title: "Delete Vehicle?",
+                                                        message: `Delete vehicle ${v.vehicleNumber}?`,
+                                                        onConfirm: () => deleteVehicle(v._id)
+                                                    })}
+                                                    className="text-red-500 hover:bg-red-50 p-2 rounded-full transition"
+                                                >
+                                                    <FaTrash />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             )}

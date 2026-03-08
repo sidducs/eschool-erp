@@ -72,8 +72,8 @@ function FeeManager() {
                 </div>
             </div>
 
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                <table className="w-full text-left text-sm">
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden overflow-x-auto">
+                <table className="w-full text-left text-sm min-w-[800px]">
                     <thead className="bg-green-50/50 border-b border-green-100">
                         <tr>
                             <th className="p-4 font-bold text-slate-600">ID</th>

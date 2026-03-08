@@ -318,7 +318,7 @@ function AdminDashboard() {
                 <span className="text-xs text-slate-400">Tracking user activities for security</span>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-left">
+                <table className="w-full text-left min-w-[800px]">
                   <thead>
                     <tr className="border-b border-slate-100 text-xs uppercase text-slate-500 font-semibold">
                       <th className="px-6 py-4">User</th>
@@ -362,7 +362,7 @@ function AdminDashboard() {
                     <p className="text-blue-700 text-sm">Download a ZIP file containing all JSON collections (Users, Fees, Classes, etc.) for disaster recovery.</p>
                   </div>
                   <button
-                    onClick={() => window.open("http://localhost:5000/api/admin/backup", "_blank")}
+                    onClick={() => window.open(`${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/admin/backup`, "_blank")}
                     className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-transform transform hover:-translate-y-0.5 flex items-center gap-2"
                   >
                     <FaUpload className="rotate-180" /> Export Data
@@ -400,7 +400,7 @@ function AdminDashboard() {
                 </div>
 
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left">
+                  <table className="w-full text-left min-w-[700px]">
                     <thead>
                       <tr className="border-b border-slate-100 text-xs uppercase text-slate-500 font-semibold">
                         <th className="px-6 py-4">Student Name</th>
@@ -498,7 +498,7 @@ function AdminDashboard() {
 
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
+                  <table className="w-full text-left border-collapse min-w-[600px]">
                     <thead>
                       <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500 font-semibold">
                         <th className="px-6 py-4">User Name</th>
@@ -592,7 +592,7 @@ function AdminDashboard() {
                   <h5 className="font-bold text-slate-800">Active Academic Classes</h5>
                 </div>
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left">
+                  <table className="w-full text-left min-w-[500px]">
                     <thead>
                       <tr className="border-b border-slate-100 text-xs uppercase text-slate-500 font-semibold">
                         <th className="px-6 py-4">Class Name</th>
@@ -648,7 +648,7 @@ function AdminDashboard() {
                 <h6 className="font-bold text-slate-800">Fee Transactions</h6>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-left">
+                <table className="w-full text-left min-w-[700px]">
                   <thead>
                     <tr className="border-b border-slate-100 text-xs uppercase text-slate-500 font-semibold">
                       <th className="px-6 py-4">Student</th>
@@ -725,7 +725,7 @@ function AdminDashboard() {
                 </button>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-left">
+                <table className="w-full text-left min-w-[600px]">
                   <thead>
                     <tr className="border-b border-slate-100 text-xs uppercase text-slate-500 font-semibold">
                       <th className="px-6 py-4">Exam Name</th>

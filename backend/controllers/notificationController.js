@@ -1,5 +1,7 @@
 const User = require("../models/User");
 const sendEmail = require("../utils/emailService");
+const { generalNotificationTemplate } = require("../services/emailTemplates");
+const Settings = require("../models/SchoolSettings");
 
 
 const sendNotice = async (req, res) => {
@@ -23,6 +25,9 @@ const sendNotice = async (req, res) => {
         const users = await User.find(query).select("email parentEmail name");
         let emailCount = 0;
 
+        const settings = await Settings.findOne();
+        const schoolName = settings?.schoolName || "ESchool ERP";
+
         // Send Emails (Asynchronous loop)
         const emailPromises = users.map(user => {
             let targetEmail = user.email;
@@ -32,10 +37,13 @@ const sendNotice = async (req, res) => {
 
             if (targetEmail) {
                 emailCount++;
+                const userName = role === 'parent' ? 'Parent' : user.name;
+                
                 return sendEmail(
                     targetEmail,
                     subject,
-                    `Dear ${role === 'parent' ? 'Parent' : user.name},\n\n${message}\n\nRegards,\nESchool Administration`
+                    `Dear ${userName},\n\n${message}\n\nRegards,\n${schoolName}`,
+                    generalNotificationTemplate(userName, subject, message, schoolName)
                 );
             }
         });

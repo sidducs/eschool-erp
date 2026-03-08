@@ -177,3 +177,65 @@ Rules:
     });
   }
 };
+
+/**
+ * 4. Generate Quiz Questions (Teacher)
+ */
+exports.generateQuizQuestions = async (req, res) => {
+  try {
+    const { topic, count = 5 } = req.body;
+
+    if (!topic) {
+      return res.status(400).json({ message: "Topic is required" });
+    }
+
+    const model = getAIModel();
+
+    const prompt = `
+Generate ${count} Multiple Choice Questions for a middle school quiz on the topic: "${topic}".
+
+Rules:
+- Each question must have exactly 4 options.
+- Identify the correct option by its index (0, 1, 2, or 3).
+- Return ONLY a JSON array.
+
+Format example:
+[
+  {
+    "questionText": "What is the capital of France?",
+    "options": ["London", "Berlin", "Paris", "Madrid"],
+    "correctOption": 2
+  }
+]
+No explanation. No markdown.
+`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const rawText = response.text();
+
+    // Clean AI output
+    let cleanText = rawText
+      .replace(/```json/gi, "")
+      .replace(/```/g, "")
+      .trim();
+
+    const match = cleanText.match(/\[.*\]/s);
+
+    if (!match) {
+      throw new Error("Invalid JSON returned by AI");
+    }
+
+    const questions = JSON.parse(match[0]);
+
+    res.status(200).json({ questions });
+
+  } catch (err) {
+    console.error("AI Quiz Error:", err);
+    res.status(500).json({
+      message: "Quiz generation failed",
+      error: err.message,
+    });
+  }
+};
+

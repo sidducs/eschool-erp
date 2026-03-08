@@ -65,7 +65,7 @@ const welcomeTemplate = (name, role, schoolName) => {
             ? `<p>Please complete your profile to proceed. The school administration will review and approve your account shortly.</p>`
             : `<p>You can now login and explore your dashboard to access all resources.</p>`
         }
-        <center><a href="${process.env.FRONTEND_URL}/login" class="btn">Go to Login</a></center>
+        <center><a href="${process.env.FRONTEND_URL || "http://localhost:3000"}/login" class="btn">Go to Login</a></center>
         `
     );
 };
@@ -84,7 +84,7 @@ const approvalTemplate = (name, srn, className, section, schoolName) => {
             <div class="info-item"><span class="info-label">Status:</span> Active</div>
         </div>
         <p>You now have full access to your student dashboard, including attendance, fees, and results.</p>
-        <center><a href="${process.env.FRONTEND_URL}/login" class="btn">Login to Dashboard</a></center>
+        <center><a href="${process.env.FRONTEND_URL || "http://localhost:3000"}/login" class="btn">Login to Dashboard</a></center>
         `,
         "#16a34a"
     );
@@ -149,7 +149,7 @@ const feeAssignedTemplate = (studentName, totalFee, breakdown, dueDate, schoolNa
         <div class="alert-box alert-yellow">
             📅 <b>Due Date:</b> ${dueDate || "N/A"}
         </div>
-        <center><a href="${process.env.FRONTEND_URL}/login" class="btn">View & Pay Online</a></center>
+        <center><a href="${process.env.FRONTEND_URL || "http://localhost:3000"}/login" class="btn">View & Pay Online</a></center>
         `
     );
 };
@@ -176,7 +176,7 @@ const feeReminderTemplate = (studentName, balance, dueDate, schoolName) => {
             </div>
         </div>
         <p>Please complete your payment before the due date to ensure uninterrupted access to school services.</p>
-        <center><a href="${process.env.FRONTEND_URL}/login" class="btn">Pay Now</a></center>
+        <center><a href="${process.env.FRONTEND_URL || "http://localhost:3000"}/login" class="btn">Pay Now</a></center>
         `,
         "#d97706"
     );
@@ -232,6 +232,21 @@ const examReminderTemplate = (studentName, examName, subject, examDate, totalMar
     );
 };
 
+// 9. General Notification Template
+const generalNotificationTemplate = (userName, subject, message, schoolName) => {
+    return baseLayout(
+        subject,
+        `
+        <p>Dear <b>${userName || "User"}</b>,</p>
+        <div class="info-box" style="background-color: #ffffff; border: 1px solid #e2e8f0;">
+            <p style="white-space: pre-wrap;">${message}</p>
+        </div>
+        <p>Warm regards,<br/><b>${schoolName || "ESchool Administration"}</b></p>
+        `,
+        "#4338ca"
+    );
+};
+
 module.exports = {
     welcomeTemplate,
     approvalTemplate,
@@ -240,5 +255,6 @@ module.exports = {
     feeAssignedTemplate,
     feeReminderTemplate,
     leaveStatusTemplate,
-    examReminderTemplate
+    examReminderTemplate,
+    generalNotificationTemplate
 };

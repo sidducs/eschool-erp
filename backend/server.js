@@ -74,6 +74,7 @@ app.use("/api/doubts", require("./routes/doubtRoutes"));
 app.use("/api/finance", require("./routes/financeRoutes"));
 app.use("/api/transport", require("./routes/transportRoutes"));
 app.use("/api/notifications", require("./routes/notificationRoutes"));
+app.use("/api/inquiries", require("./routes/inquiryRoutes"));
 app.get("/", (req, res) => {
   res.send("ESchool API is running...");
 });
