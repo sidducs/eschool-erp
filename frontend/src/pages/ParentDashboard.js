@@ -116,7 +116,9 @@ function ParentDashboard() {
             <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-100 transition-transform duration-300 ease-in-out transform lg:relative lg:translate-x-0 ${showSidebar ? 'translate-x-0' : '-translate-x-full'} dark:bg-black border-r dark:border-slate-800`}>
                 <div className="flex items-center justify-between h-16 p-6 bg-slate-950/50 sidebar-header">
                     <div className="flex items-center gap-3">
-                        <div className="bg-indigo-500 p-1.5 rounded-lg"><FaSchool className="text-white" /></div>
+                        <div className="bg-transparent p-1">
+                            <img src="/eschool-logo.png" alt="Logo" className="w-8 h-8 object-contain" />
+                        </div>
                         <span className="font-bold text-lg tracking-wider italic">PARENT PORTAL</span>
                     </div>
                     <button className="lg:hidden text-slate-400 hover:text-white" onClick={() => setShowSidebar(false)}>
