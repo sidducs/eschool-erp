@@ -24,6 +24,8 @@ import FeeReceiptView from "./pages/FeeReceiptView";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import StudentProfileCompletion from "./pages/StudentProfileCompletion";
+import ParentDashboard from "./pages/ParentDashboard";
+import ParentRegister from "./pages/ParentRegister";
 
 function AppWrapper() {
   const { user, token, loading } = useContext(AuthContext);
@@ -39,11 +41,13 @@ function AppWrapper() {
             user.role === "admin" ? "/admin" :
               user.role === "teacher" ? "/teacher" :
                 user.role === "accountant" ? "/accountant" :
-                  "/student"
+                  user.role === "parent" ? "/parent/dashboard" :
+                    "/student"
           } /> : <Loader />
         )} />
 
         <Route path="/register" element={!token ? <Register /> : <Navigate to="/" />} />
+        <Route path="/parent/register" element={!token ? <ParentRegister /> : <Navigate to="/" />} />
         <Route path="/login" element={!token ? <Login /> : <Navigate to="/" />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
@@ -62,6 +66,9 @@ function AppWrapper() {
         <Route path="/teacher/enter-marks" element={token && user?.role === "teacher" ? <TeacherEnterMarks /> : <Navigate to="/login" />} />
         <Route path="/teacher/timetable" element={token && user?.role === "teacher" ? <TeacherTimetable /> : <Navigate to="/login" />} />
         <Route path="/teacher/leaves" element={token && user?.role === "teacher" ? <AdminLeaves /> : <Navigate to="/login" />} />
+
+        {/* Parent */}
+        <Route path="/parent/dashboard" element={token && user?.role === "parent" ? <ParentDashboard /> : <Navigate to="/login" />} />
 
         {/* Student & General */}
         <Route path="/student" element={token && user?.role === "student" ? (user.status === 'pending' ? <Navigate to="/student/complete-profile" /> : <StudentDashboard />) : <Navigate to="/login" />} />
