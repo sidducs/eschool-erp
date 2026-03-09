@@ -1,42 +1,64 @@
 const nodemailer = require("nodemailer");
 
-const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
+// 🌐 Configure Transporter with Mock Mode Fallback
+const createTransporter = () => {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        console.warn("⚠️  EMAIL_USER or EMAIL_PASS missing. Email Service will run in MOCK MODE.");
+        return null;
     }
-});
 
-// Verify connection once
-transporter.verify((error) => {
-    if (error) {
-        console.error("Email service initialization failed");
-    }
-});
+    return nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS
+        }
+    });
+};
 
+const transporter = createTransporter();
+
+// Verify connection if not in mock mode
+if (transporter) {
+    transporter.verify((error) => {
+        if (error) {
+            console.error("❌ Email service initialization failed:", error.message);
+        } else {
+            console.log("✅ Email service is ready to send.");
+        }
+    });
+}
+
+/**
+ * 📧 Send Email with standardized logic
+ */
 const sendEmail = async (to, subject, text, htmlContent = null) => {
     try {
-        if (!to || !to.includes("@")) return false;
+        if (!to || !to.includes("@")) {
+            console.warn(`⚠️  Invalid recipient email: ${to}`);
+            return false;
+        }
 
         const mailOptions = {
-            from: `"ESchool ERP" <${process.env.EMAIL_USER}>`,
+            from: `"ESchool ERP" <${process.env.EMAIL_USER || "noreply@eschool.com"}>`,
             to,
             subject,
             text,
+            html: htmlContent
         };
 
-        if (htmlContent) {
-            mailOptions.html = htmlContent;
+        if (!transporter) {
+            console.log("--- 📧 MOCK EMAIL BROADCAST ---");
+            console.log(`TO: ${to}`);
+            console.log(`SUBJECT: ${subject}`);
+            console.log("-------------------------------");
+            return true;
         }
 
         await transporter.sendMail(mailOptions);
-
         return true;
     } catch (error) {
-        console.error("Email sending failed:", error.message);
+        console.error("❌ Email sending failed:", error.message);
         return false;
     }
 };

@@ -1,5 +1,5 @@
 const User = require("../models/User");
-const sendEmail = require("../utils/emailService");
+const { sendEmail } = require("../services/notificationService");
 const { generalNotificationTemplate } = require("../services/emailTemplates");
 const Settings = require("../models/SchoolSettings");
 

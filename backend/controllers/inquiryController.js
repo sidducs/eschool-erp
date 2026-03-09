@@ -1,5 +1,5 @@
 const Inquiry = require("../models/Inquiry");
-const sendEmail = require("../utils/emailService");
+const { sendEmail } = require("../services/notificationService");
 const { baseLayout } = require("../services/emailTemplates");
 
 const sendInquiry = async (req, res) => {
