@@ -20,6 +20,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       minlength: 6,
+      select: false, // 🔐 TC-SEC-03: Never return password in queries by default
     },
 
     role: {

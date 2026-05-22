@@ -81,19 +81,25 @@ const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Force lowercase email just in case
-    const user = await User.findOne({ email: email.toLowerCase() });
+    // 🔐 TC-AUTH-06: Type guard — reject NoSQL injection objects
+    if (typeof email !== 'string' || typeof password !== 'string') {
+      return res.status(400).json({ message: 'Invalid input format' });
+    }
+
+    // 🔐 TC-SEC-03: Select +password explicitly only for bcrypt compare
+    const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+password');
 
     if (user && (await user.matchPassword(password))) {
       // 📝 Log Login Action
       await logAction(user._id, "LOGIN", `User logged in from IP: ${req.ip}`, req.ip);
 
+      // 🔐 TC-SEC-03: Never send password hash — manually construct safe response
       res.json({
         _id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
-        status: user.status, // Return status
+        status: user.status,
         classId: user.classId,
         token: generateToken(user._id),
       });

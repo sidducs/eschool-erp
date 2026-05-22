@@ -1,13 +1,14 @@
 const express = require("express");
 const authController = require("../controllers/authController");
+const { loginLimiter } = require("../middleware/rateLimiter"); // 🔐 TC-SEC-04
 
 const router = express.Router();
 
 const fileUpload = require("../middleware/fileUpload");
 
 
-router.post("/register", authController.registerUser);
-router.post("/login", authController.loginUser);
+router.post("/register", loginLimiter, authController.registerUser);
+router.post("/login", loginLimiter, authController.loginUser);
 router.get("/profile", require("../middleware/authMiddleware").protect, authController.getProfile);
 router.put("/profile", require("../middleware/authMiddleware").protect, fileUpload.single("profilePicture"), authController.updateProfile);
 const { forgotPassword, resetPassword } = require("../controllers/forgotPasswordController");

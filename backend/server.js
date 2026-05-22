@@ -2,6 +2,7 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
+const mongoSanitize = require("express-mongo-sanitize");
 const connectDB = require("./config/db");
 const aiRoutes = require("./routes/aiRoutes");
 const feeRoutes = require("./routes/feeRoutes");
@@ -9,7 +10,8 @@ const dashboardRoutes = require("./routes/dashboardRoutes");
 const noticeRoutes = require("./routes/noticeRoutes");
 const cron = require("node-cron");
 const Transaction = require("./models/Transaction");
-const libraryRoutes = require("./routes/libraryRoutes"); // 
+const libraryRoutes = require("./routes/libraryRoutes");
+const { globalLimiter } = require("./middleware/rateLimiter");
 dotenv.config();
 connectDB();
 
@@ -52,6 +54,8 @@ app.use(cors({
 }));
 
 app.use(express.json());
+app.use(mongoSanitize()); // 🔐 TC-AUTH-06: Strip MongoDB operators from input
+app.use("/api", globalLimiter); // 🔐 TC-SEC-04: Global rate limiting
 
 // Static Files
 const path = require('path');
@@ -90,6 +94,11 @@ app.get("/", (req, res) => {
   res.send("ESchool API is running...");
 });
 
+// 🔐 TC-SEC-02: 404 handler for unknown routes
+app.use((req, res) => {
+  res.status(404).json({ message: "Route not found" });
+});
+
 
 const http = require("http");
 const { Server } = require("socket.io");
@@ -124,3 +133,30 @@ server.listen(PORT, () => {
 // Register Automated Jobs
 require('./jobs/feeReminderJob');
 require('./jobs/examReminderJob');
+
+// 🔐 TC-SEC-02: Global error handler — MUST have 4 params
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.error("[ERROR]", err.stack); // log internally only
+
+  if (err.name === 'CastError') {
+    return res.status(400).json({ message: 'Invalid ID format' });
+  }
+  if (err.name === 'ValidationError') {
+    const messages = Object.values(err.errors).map(e => e.message);
+    return res.status(422).json({ message: messages.join(', ') });
+  }
+  if (err.name === 'JsonWebTokenError') {
+    return res.status(401).json({ message: 'Invalid token' });
+  }
+  if (err.message && err.message.includes('CORS')) {
+    return res.status(403).json({ message: 'CORS policy violation' });
+  }
+
+  const status = err.status || err.statusCode || 500;
+  res.status(status).json({
+    message: process.env.NODE_ENV === 'production'
+      ? 'An unexpected error occurred'
+      : err.message,
+  });
+});
