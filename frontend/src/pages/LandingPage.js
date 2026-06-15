@@ -288,7 +288,7 @@ export default function LandingPage() {
               </div>
 
               <div className="mt-10 flex flex-wrap gap-6 justify-center lg:justify-start">
-                {[["5", "User Roles"], ["77+", "Modules"], ["AI", "Powered"], ["Free", "Hosting"]].map(([val, label]) => (
+                {[["5", "User Roles"], ["16+", "Modules"], ["AI", "Powered"], ["Free", "Hosting"]].map(([val, label]) => (
                   <div key={label} className="text-center">
                     <div className="text-2xl font-black text-white">{val}</div>
                     <div className="text-xs text-slate-500 font-medium">{label}</div>
