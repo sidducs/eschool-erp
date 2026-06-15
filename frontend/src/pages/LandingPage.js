@@ -288,7 +288,7 @@ export default function LandingPage() {
               </div>
 
               <div className="mt-10 flex flex-wrap gap-6 justify-center lg:justify-start">
-                {[["5", "User Roles"], ["16+", "Modules"], ["AI", "Powered"], ["Free", "Hosting"]].map(([val, label]) => (
+                {[["5", "User Roles"], ["7777+", "Modules"], ["AI", "Powered"], ["Free", "Hosting"]].map(([val, label]) => (
                   <div key={label} className="text-center">
                     <div className="text-2xl font-black text-white">{val}</div>
                     <div className="text-xs text-slate-500 font-medium">{label}</div>
@@ -404,43 +404,43 @@ export default function LandingPage() {
             <div className="relative">
               <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-[2rem] p-1 shadow-2xl overflow-hidden transform lg:rotate-3 hover:rotate-0 transition-transform duration-700">
                 <div className="bg-slate-950 rounded-[1.8rem] p-6">
-                   <div className="flex items-center gap-3 mb-6">
-                      <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center">
-                        <FaChartBar className="text-blue-400" />
-                      </div>
-                      <div>
-                        <h4 className="text-white font-bold">Academic Performance</h4>
-                        <p className="text-slate-500 text-xs">Live Analytics</p>
-                      </div>
-                   </div>
-                   <div className="space-y-4">
-                      {[
-                        { l: "Attendance rate", v: "98.4%", w: "w-[98%]", c: "bg-emerald-500" },
-                        { l: "Fee Collection", v: "₹4.2M", w: "w-[85%]", c: "bg-blue-500" },
-                        { l: "Student Success", v: "92%", w: "w-[92%]", c: "bg-violet-500" }
-                      ].map((bar, i) => (
-                        <div key={i}>
-                          <div className="flex justify-between text-xs font-bold text-slate-400 mb-2">
-                            <span>{bar.l}</span>
-                            <span>{bar.v}</span>
-                          </div>
-                          <div className="h-2 bg-white/5 rounded-full overflow-hidden">
-                            <div className={`${bar.c} h-full ${bar.w} rounded-full`}></div>
-                          </div>
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center">
+                      <FaChartBar className="text-blue-400" />
+                    </div>
+                    <div>
+                      <h4 className="text-white font-bold">Academic Performance</h4>
+                      <p className="text-slate-500 text-xs">Live Analytics</p>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    {[
+                      { l: "Attendance rate", v: "98.4%", w: "w-[98%]", c: "bg-emerald-500" },
+                      { l: "Fee Collection", v: "₹4.2M", w: "w-[85%]", c: "bg-blue-500" },
+                      { l: "Student Success", v: "92%", w: "w-[92%]", c: "bg-violet-500" }
+                    ].map((bar, i) => (
+                      <div key={i}>
+                        <div className="flex justify-between text-xs font-bold text-slate-400 mb-2">
+                          <span>{bar.l}</span>
+                          <span>{bar.v}</span>
                         </div>
-                      ))}
-                   </div>
+                        <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                          <div className={`${bar.c} h-full ${bar.w} rounded-full`}></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
               <div className="absolute -bottom-10 -left-10 bg-white p-6 rounded-2xl shadow-2xl border border-slate-100 hidden md:block animate-bounce-slow">
                 <div className="flex items-center gap-4">
-                   <div className="bg-amber-100 p-3 rounded-xl text-amber-600">
-                      <FaStar />
-                   </div>
-                   <div>
-                      <div className="text-xl font-black text-slate-800">4.9/5</div>
-                      <div className="text-xs text-slate-500 font-medium">User Rating</div>
-                   </div>
+                  <div className="bg-amber-100 p-3 rounded-xl text-amber-600">
+                    <FaStar />
+                  </div>
+                  <div>
+                    <div className="text-xl font-black text-slate-800">4.9/5</div>
+                    <div className="text-xs text-slate-500 font-medium">User Rating</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -475,9 +475,9 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <p className="text-center text-slate-400 text-xs font-bold uppercase tracking-widest mb-10">Trusted Technology Partners</p>
           <div className="flex flex-wrap justify-center gap-10 md:gap-20 opacity-50 grayscale hover:grayscale-0 transition-all duration-700">
-             {["MongoDB", "Vercel", "DigitalOcean", "Google AI", "AWS"].map(brand => (
-               <span key={brand} className="text-2xl font-black text-slate-300 italic transform hover:scale-110 transition-transform cursor-default">{brand}</span>
-             ))}
+            {["MongoDB", "Vercel", "DigitalOcean", "Google AI", "AWS"].map(brand => (
+              <span key={brand} className="text-2xl font-black text-slate-300 italic transform hover:scale-110 transition-transform cursor-default">{brand}</span>
+            ))}
           </div>
         </div>
       </section>
@@ -523,12 +523,12 @@ export default function LandingPage() {
           <div className="flex gap-2 mb-10 overflow-x-auto pb-2 scrollbar-hide justify-start md:justify-center">
             {Object.entries(roles).map(([key, role]) => (
               <button
-                 key={key}
-                 onClick={() => setActiveTab(key)}
-                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm whitespace-nowrap transition-all ${activeTab === key
-                     ? `bg-gradient-to-r ${role.color} text-white shadow-lg`
-                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                   }`}
+                key={key}
+                onClick={() => setActiveTab(key)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm whitespace-nowrap transition-all ${activeTab === key
+                  ? `bg-gradient-to-r ${role.color} text-white shadow-lg`
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
               >
                 {role.icon} {role.label}
               </button>
@@ -602,82 +602,82 @@ export default function LandingPage() {
       </section>
 
       <section id="contact" className="bg-white py-24">
-         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="bg-slate-900 rounded-[3rem] overflow-hidden p-10 md:p-20 relative">
-               <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/20 rounded-full blur-3xl"></div>
-               <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 relative z-10">
-                  <div>
-                     <h2 className="text-4xl font-black text-white mb-6">Let's Discuss Your <span className="text-blue-400">School's Future</span></h2>
-                     <p className="text-slate-400 mb-8">Have questions? Our experts are ready to help you implement eSchool ERP at your institution.</p>
-                     <div className="space-y-6">
-                        <div className="flex items-center gap-4 text-white">
-                           <div className="w-12 h-12 bg-blue-600/20 rounded-xl flex items-center justify-center text-blue-400">
-                              <FaEnvelope />
-                           </div>
-                           <div>
-                              <div className="text-xs text-slate-500 font-bold uppercase tracking-widest">Email Us</div>
-                              <div className="font-bold">eschoolerpadm@gmail.com
-</div>
-                           </div>
-                        </div>
-                        <div className="flex items-center gap-4 text-white">
-                           <div className="w-12 h-12 bg-indigo-600/20 rounded-xl flex items-center justify-center text-indigo-400">
-                              <FaUniversity />
-                           </div>
-                           <div>
-                              <div className="text-xs text-slate-500 font-bold uppercase tracking-widest">Visit Us</div>
-                              <div className="font-bold">Bangalore, Karnataka, India</div>
-                           </div>
-                        </div>
-                     </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="bg-slate-900 rounded-[3rem] overflow-hidden p-10 md:p-20 relative">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/20 rounded-full blur-3xl"></div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 relative z-10">
+              <div>
+                <h2 className="text-4xl font-black text-white mb-6">Let's Discuss Your <span className="text-blue-400">School's Future</span></h2>
+                <p className="text-slate-400 mb-8">Have questions? Our experts are ready to help you implement eSchool ERP at your institution.</p>
+                <div className="space-y-6">
+                  <div className="flex items-center gap-4 text-white">
+                    <div className="w-12 h-12 bg-blue-600/20 rounded-xl flex items-center justify-center text-blue-400">
+                      <FaEnvelope />
+                    </div>
+                    <div>
+                      <div className="text-xs text-slate-500 font-bold uppercase tracking-widest">Email Us</div>
+                      <div className="font-bold">eschoolerpadm@gmail.com
+                      </div>
+                    </div>
                   </div>
-                  <div className="bg-white/5 border border-white/10 p-8 rounded-3xl">
-                     <form onSubmit={handleInquirySubmit} className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                           <input 
-                             type="text" 
-                             placeholder="Full Name" 
-                             className="w-full bg-slate-800 border-none rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-blue-500" 
-                             value={inquiryData.name}
-                             onChange={(e) => setInquiryData({...inquiryData, name: e.target.value})}
-                             required
-                           />
-                           <input 
-                             type="email" 
-                             placeholder="Email Address" 
-                             className="w-full bg-slate-800 border-none rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-blue-500" 
-                             value={inquiryData.email}
-                             onChange={(e) => setInquiryData({...inquiryData, email: e.target.value})}
-                             required
-                           />
-                        </div>
-                        <input 
-                          type="text" 
-                          placeholder="Institution Name" 
-                          className="w-full bg-slate-800 border-none rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-blue-500" 
-                          value={inquiryData.institution}
-                          onChange={(e) => setInquiryData({...inquiryData, institution: e.target.value})}
-                          required
-                        />
-                        <textarea 
-                          placeholder="Tell us about your needs..." 
-                          rows="4" 
-                          className="w-full bg-slate-800 border-none rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-blue-500"
-                          value={inquiryData.message}
-                          onChange={(e) => setInquiryData({...inquiryData, message: e.target.value})}
-                          required
-                        ></textarea>
-                        <button 
-                          disabled={loading}
-                          className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl shadow-xl shadow-blue-900/40 transition-all disabled:opacity-50"
-                        >
-                          {loading ? "Sending..." : "Send Inquiry"}
-                        </button>
-                     </form>
+                  <div className="flex items-center gap-4 text-white">
+                    <div className="w-12 h-12 bg-indigo-600/20 rounded-xl flex items-center justify-center text-indigo-400">
+                      <FaUniversity />
+                    </div>
+                    <div>
+                      <div className="text-xs text-slate-500 font-bold uppercase tracking-widest">Visit Us</div>
+                      <div className="font-bold">Bangalore, Karnataka, India</div>
+                    </div>
                   </div>
-               </div>
+                </div>
+              </div>
+              <div className="bg-white/5 border border-white/10 p-8 rounded-3xl">
+                <form onSubmit={handleInquirySubmit} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <input
+                      type="text"
+                      placeholder="Full Name"
+                      className="w-full bg-slate-800 border-none rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-blue-500"
+                      value={inquiryData.name}
+                      onChange={(e) => setInquiryData({ ...inquiryData, name: e.target.value })}
+                      required
+                    />
+                    <input
+                      type="email"
+                      placeholder="Email Address"
+                      className="w-full bg-slate-800 border-none rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-blue-500"
+                      value={inquiryData.email}
+                      onChange={(e) => setInquiryData({ ...inquiryData, email: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Institution Name"
+                    className="w-full bg-slate-800 border-none rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-blue-500"
+                    value={inquiryData.institution}
+                    onChange={(e) => setInquiryData({ ...inquiryData, institution: e.target.value })}
+                    required
+                  />
+                  <textarea
+                    placeholder="Tell us about your needs..."
+                    rows="4"
+                    className="w-full bg-slate-800 border-none rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-blue-500"
+                    value={inquiryData.message}
+                    onChange={(e) => setInquiryData({ ...inquiryData, message: e.target.value })}
+                    required
+                  ></textarea>
+                  <button
+                    disabled={loading}
+                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl shadow-xl shadow-blue-900/40 transition-all disabled:opacity-50"
+                  >
+                    {loading ? "Sending..." : "Send Inquiry"}
+                  </button>
+                </form>
+              </div>
             </div>
-         </div>
+          </div>
+        </div>
       </section>
 
       <section ref={ctaRef} className="bg-gradient-to-br from-blue-600 to-indigo-700 py-20">
